@@ -958,36 +958,38 @@ contains
     use ESMF                  , only : ESMF_GridComp, ESMF_GridCompGet, ESMF_VM, ESMF_VMGet
     use ESMF                  , only : ESMF_LogWrite, ESMF_SUCCESS, ESMF_LOGMSG_INFO, ESMF_Config
     use ESMF                  , only : ESMF_ConfigGetLen, ESMF_LogFoundAllocError, ESMF_ConfigGetAttribute
+
     use ESMF                  , only : ESMF_RC_NOT_VALID, ESMF_LogSetError
     use ESMF                  , only : ESMF_GridCompIsPetLocal, ESMF_MethodAdd, ESMF_UtilStringLowerCase
-    use ESMF                  , only : ESMF_VMIsCreated
+    use ESMF                  , only : ESMF_VMIsCreated, ESMF_INFO, ESMF_InfoCreate
+
     use NUOPC                 , only : NUOPC_CompAttributeGet
     use NUOPC_Driver          , only : NUOPC_DriverAddComp
     use med_constants_mod     , only : dbug_flag => med_constants_dbug_flag, CS, CL
     use mpi                   , only : MPI_COMM_NULL
     use mct_mod               , only : mct_world_init
     use shr_pio_mod           , only : shr_pio_init2
-    use med                   , only : MedSetServices => SetServices
+    use med                   , only : MedSetServices => SetServices, MEDSetVM => SetVM
 #ifdef ATM_PRESENT
-    use atm_comp_nuopc        , only : ATMSetServices => SetServices
+    use atm_comp_nuopc        , only : ATMSetServices => SetServices, ATMSetVM => SetVM
 #endif
 #ifdef ICE_PRESENT
-    use ice_comp_nuopc        , only : ICESetServices => SetServices
+    use ice_comp_nuopc        , only : ICESetServices => SetServices, ICESetVM => SetVM
 #endif
 #ifdef LND_PRESENT
-    use lnd_comp_nuopc        , only : LNDSetServices => SetServices
+    use lnd_comp_nuopc        , only : LNDSetServices => SetServices, LNDSetVM => SetVM
 #endif
 #ifdef OCN_PRESENT
-    use ocn_comp_nuopc        , only : OCNSetServices => SetServices
+    use ocn_comp_nuopc        , only : OCNSetServices => SetServices, OCNSetVM => SetVM
 #endif
 #ifdef WAV_PRESENT
-    use wav_comp_nuopc        , only : WAVSetServices => SetServices
+    use wav_comp_nuopc        , only : WAVSetServices => SetServices, WAVSetVM => SetVM
 #endif
 #ifdef ROF_PRESENT
-    use rof_comp_nuopc        , only : ROFSetServices => SetServices
+    use rof_comp_nuopc        , only : ROFSetServices => SetServices, ROFSetVM => SetVM
 #endif
 #ifdef GLC_PRESENT
-    use glc_comp_nuopc        , only : GLCSetServices => SetServices
+    use glc_comp_nuopc        , only : GLCSetServices => SetServices, GLCSetVM => SetVM
 #endif
 
     ! input/output variables
@@ -999,6 +1001,7 @@ contains
     type(ESMF_GridComp)            :: child
     type(ESMF_VM)                  :: vm
     type(ESMF_Config)              :: config
+    type(ESMF_info)                :: info
     integer                        :: componentcount
     integer                        :: PetCount
     integer                        :: LocalPet
@@ -1025,6 +1028,10 @@ contains
 
     maxthreads = 1
     call ESMF_GridCompGet(driver, vm=vm, config=config, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! info used to set component threading
+    info = ESMF_InfoCreate(rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     call ReadAttributes(driver, config, "PELAYOUT_attributes::", rc=rc)
@@ -1112,55 +1119,59 @@ contains
        endif
 
        cnt = 1
-       do ntask = rootpe, (rootpe+ntasks*stride)-1, stride
+       do ntask = rootpe, nthrds*(rootpe+ntasks*stride)-1, stride*nthrds
           petlist(cnt) = ntask
           cnt = cnt + 1
        enddo
 
        comps(i+1) = i+1
 
+       call ESMF_AttributeSet(info, name="maxPeCountPerPet", value=nthrds, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+
        if (trim(compLabels(i)) == 'MED') then
           med_id = i + 1
-          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), MEDSetServices, petList=petlist, comp=child, rc=rc)
+          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), MEDSetServices, MEDSetVM, petList=petlist, &
+               comp=child, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 #ifdef ATM_PRESENT
        elseif(trim(compLabels(i)) .eq. 'ATM') then
-          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), ATMSetServices, petList=petlist, comp=child, rc=rc)
+          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), ATMSetServices, ATMSetVM, petList=petlist, comp=child, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 #endif
 #ifdef LND_PRESENT
        elseif(trim(compLabels(i)) .eq. 'LND') then
-          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), LNDSetServices, PetList=petlist, comp=child, rc=rc)
+          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), LNDSetServices, LNDSetVM, PetList=petlist, comp=child, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 #endif
 #ifdef OCN_PRESENT
        elseif(trim(compLabels(i)) .eq. 'OCN') then
-          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), OCNSetServices, PetList=petlist, comp=child, rc=rc)
+          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), OCNSetServices, OCNSetVM, PetList=petlist, comp=child, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 #endif
 #ifdef ICE_PRESENT
        elseif(trim(compLabels(i)) .eq. 'ICE') then
-          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), ICESetServices, PetList=petlist, comp=child, rc=rc)
+          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), ICESetServices, ICESetVM, PetList=petlist, comp=child, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 #endif
 #ifdef GLC_PRESENT
        elseif(trim(compLabels(i)) .eq. 'GLC') then
-          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), GLCSetServices, PetList=petlist, comp=child, rc=rc)
+          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), GLCSetServices, GLCSetVM, PetList=petlist, comp=child, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 #endif
 #ifdef ROF_PRESENT
        elseif(trim(compLabels(i)) .eq. 'ROF') then
-          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), ROFSetServices, PetList=petlist, comp=child, rc=rc)
+          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), ROFSetServices, ROFSetVM, PetList=petlist, comp=child, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 #endif
 #ifdef WAV_PRESENT
        elseif(trim(compLabels(i)) .eq. 'WAV') then
-          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), WAVSetServices, PetList=petlist, comp=child, rc=rc)
+          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), WAVSetServices, WAVSetVM, PetList=petlist, comp=child, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 #endif
 #ifdef ESP_PRESENT
        elseif(trim(compLabels(i)) .eq. 'ESP') then
-          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), ESPSetServices, PetList=petlist, comp=child, rc=rc)
+          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), ESPSetServices, ESPSetVM, PetList=petlist, comp=child, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 #endif
        else

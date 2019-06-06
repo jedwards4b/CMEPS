@@ -5,6 +5,7 @@ module MED
   !-----------------------------------------------------------------------------
 
   use ESMF                   , only : ESMF_VMLogMemInfo
+  use NUOPC_Model            , only : SetVM
   use med_kind_mod           , only : CX=>SHR_KIND_CX, CS=>SHR_KIND_CS, CL=>SHR_KIND_CL, R8=>SHR_KIND_R8
   use med_constants_mod      , only : dbug_flag          => med_constants_dbug_flag
   use med_constants_mod      , only : spval_init         => med_constants_spval_init
@@ -17,7 +18,7 @@ module MED
   use med_methods_mod        , only : State_GeomWrite    => med_methods_State_GeomWrite
   use med_methods_mod        , only : State_reset        => med_methods_State_reset
   use med_methods_mod        , only : State_getNumFields => med_methods_State_getNumFields
-  use med_methods_mod        , only : State_GetScalar    => med_methods_State_GetScalar 
+  use med_methods_mod        , only : State_GetScalar    => med_methods_State_GetScalar
   use med_methods_mod        , only : FB_Init            => med_methods_FB_init
   use med_methods_mod        , only : FB_Init_pointer    => med_methods_FB_Init_pointer
   use med_methods_mod        , only : FB_Reset           => med_methods_FB_Reset
@@ -25,7 +26,7 @@ module MED
   use med_methods_mod        , only : FB_FldChk          => med_methods_FB_FldChk
   use med_methods_mod        , only : FB_diagnose        => med_methods_FB_diagnose
   use med_methods_mod        , only : clock_timeprint    => med_methods_clock_timeprint
-  use med_time_mod           , only : alarmInit          => med_time_alarmInit 
+  use med_time_mod           , only : alarmInit          => med_time_alarmInit
   use med_utils_mod          , only : memcheck           => med_memcheck
   use med_internalstate_mod  , only : InternalState
   use med_internalstate_mod  , only : med_coupling_allowed, logunit, mastertask
@@ -47,7 +48,7 @@ module MED
   private
 
   public  SetServices
-
+  public  SetVM
   private InitializeP0
   private InitializeIPDv03p1 ! advertise fields
   private InitializeIPDv03p3 ! realize connected Fields with transfer action "provide"
@@ -2028,8 +2029,8 @@ contains
     type(ESMF_ALARM)        :: glc_avg_alarm
     logical                 :: glc_present
     character(len=16)       :: glc_avg_period
-    integer                 :: opt_n            
-    integer                 :: opt_ymd          
+    integer                 :: opt_n
+    integer                 :: opt_ymd
     type(ESMF_ALARM)        :: alarm
     logical                 :: first_time = .true.
     character(len=*),parameter :: subname='(module_MED:SetRunClock)'
