@@ -814,13 +814,13 @@ contains
           call NUOPC_CompAttributeGet(driver, name="mediator_read_restart", value=cvalue, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
           read(cvalue,*) lvalue
-          if (.not. lvalue) then         
+          if (.not. lvalue) then
             call NUOPC_CompAttributeGet(driver, name=trim(attrList(n)), value=cvalue, rc=rc)
             if (chkerr(rc,__LINE__,u_FILE_u)) return
           end if
           call NUOPC_CompAttributeSet(gcomp, name=trim(attrList(n)), value=trim(cvalue), rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
-       else 
+       else
           call NUOPC_CompAttributeGet(driver, name=trim(attrList(n)), value=cvalue, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
           call NUOPC_CompAttributeSet(gcomp, name=trim(attrList(n)), value=trim(cvalue), rc=rc)
@@ -960,6 +960,7 @@ contains
     use ESMF                  , only : ESMF_ConfigGetLen, ESMF_LogFoundAllocError, ESMF_ConfigGetAttribute
     use ESMF                  , only : ESMF_RC_NOT_VALID, ESMF_LogSetError
     use ESMF                  , only : ESMF_GridCompIsPetLocal, ESMF_MethodAdd, ESMF_UtilStringLowerCase
+    use ESMF                  , only : ESMF_VMIsCreated
     use NUOPC                 , only : NUOPC_CompAttributeGet
     use NUOPC_Driver          , only : NUOPC_DriverAddComp
     use med_constants_mod     , only : dbug_flag => med_constants_dbug_flag, CS, CL
@@ -1171,9 +1172,10 @@ contains
        call AddAttributes(child, driver, config, i+1, trim(compLabels(i)), inst_suffix, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-       if (ESMF_GridCompIsPetLocal(child, rc=rc)) then
-          call ESMF_GridCompGet(child, vm=vm, rc=rc)
-          if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_GridCompGet(child, vm=vm, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+       if (ESMF_VMIsCreated(vm, rc=rc)) then
 
           call ESMF_VMGet(vm, mpiCommunicator=comms(i+1), localPet=comp_comm_iam(i), rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
