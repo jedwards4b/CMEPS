@@ -1002,7 +1002,6 @@ contains
     type(ESMF_info)                :: info
     integer                        :: componentcount
     integer                        :: PetCount
-    integer                        :: ntasks, rootpe, nthrds, stride
     integer                        :: ntask, cnt
     integer                        :: i
     integer                        :: stat
@@ -1016,6 +1015,7 @@ contains
     logical                        :: isPresent
     integer, allocatable           :: comp_comm_iam(:)
     logical, allocatable           :: comp_iamin(:)
+    integer, allocatable           :: nthrds(:), rootpe(:), stride(:), ntasks(:)
     character(len=5)               :: inst_suffix
     character(CL)                  :: cvalue
     character(len=*), parameter    :: subname = "(esm_pelayout.F90:esm_init_pelayout)"
@@ -1038,14 +1038,18 @@ contains
     componentCount = ESMF_ConfigGetLen(config,label="component_list:", rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    allocate(ntasks(componentCount), nthrds(componentCount), rootpe(componentCount), stride(componentCount), stat=stat)
+    if (ESMF_LogFoundAllocError(statusToCheck=stat, msg="Allocation failed.", &
+         line=__LINE__, file=u_FILE_u, rcToReturn=rc)) return
+
     allocate(compLabels(componentCount), stat=stat)
     if (ESMF_LogFoundAllocError(statusToCheck=stat, msg="Allocation of compLabels failed.", &
          line=__LINE__, file=u_FILE_u, rcToReturn=rc)) return
     allocate(comp_iamin(componentCount), stat=stat)
-    if (ESMF_LogFoundAllocError(statusToCheck=stat, msg="Allocation of compLabels failed.", &
+    if (ESMF_LogFoundAllocError(statusToCheck=stat, msg="Allocation of comp id failed.", &
          line=__LINE__, file=u_FILE_u, rcToReturn=rc)) return
     allocate(comp_comm_iam(componentCount), stat=stat)
-    if (ESMF_LogFoundAllocError(statusToCheck=stat, msg="Allocation of compLabels failed.", &
+    if (ESMF_LogFoundAllocError(statusToCheck=stat, msg="Allocation of comp comm failed.", &
          line=__LINE__, file=u_FILE_u, rcToReturn=rc)) return
 
     call ESMF_ConfigGetAttribute(config, valueList=compLabels, label="component_list:", count=componentCount, rc=rc)
@@ -1064,73 +1068,80 @@ contains
     comps(1) = 1
     comms(1) = Global_Comm
     do i=1,componentCount
-       ! info used to set component threading
-       info = ESMF_InfoCreate(rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
 
        namestr = ESMF_UtilStringLowerCase(compLabels(i))
        if (namestr == 'med') namestr = 'cpl'
        call NUOPC_CompAttributeGet(driver, name=trim(namestr)//'_ntasks', value=cvalue, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
-       read(cvalue,*) ntasks
+       read(cvalue,*) ntasks(i)
 
-       if (ntasks < 0 .or. ntasks > PetCount) then
-          write (msgstr, *) "Invalid NTASKS value specified for component: ",namestr, ' ntasks: ',ntasks
+       if (ntasks(i) < 0 .or. ntasks(i) > PetCount) then
+          write (msgstr, *) "Invalid NTASKS value specified for component: ",namestr, ' ntasks: ',ntasks(i)
           call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
           return
        endif
 
        call NUOPC_CompAttributeGet(driver, name=trim(namestr)//'_nthreads', value=cvalue, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
-       read(cvalue,*) nthrds
-
-       if(nthrds > maxthreads) maxthreads = nthrds
+       read(cvalue,*) nthrds(i)
 
        call NUOPC_CompAttributeGet(driver, name=trim(namestr)//'_rootpe', value=cvalue, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
-       read(cvalue,*) rootpe
-       if (rootpe < 0 .or. rootpe > PetCount) then
-          write (msgstr, *) "Invalid Rootpe value specified for component: ",namestr, ' rootpe: ',rootpe
+       read(cvalue,*) rootpe(i)
+       if (rootpe(i) < 0 .or. rootpe(i) > PetCount) then
+          write (msgstr, *) "Invalid Rootpe value specified for component: ",namestr, ' rootpe: ',rootpe(i)
           call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
           return
        endif
-       if(rootpe+ntasks > PetCount) then
-          write (msgstr, *) "Invalid pelayout value specified for component: ",namestr, ' rootpe+ntasks: ',rootpe+ntasks
+       if(rootpe(i)+ntasks(i) > PetCount) then
+          write (msgstr, *) "Invalid pelayout value specified for component: ",namestr, ' rootpe+ntasks: ',rootpe(i)+ntasks(i)
           call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
           return
        endif
 
        call NUOPC_CompAttributeGet(driver, name=trim(namestr)//'_pestride', value=cvalue, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
-       read(cvalue,*) stride
-       if (stride < 1 .or. rootpe+ntasks*stride > PetCount) then
-          write (msgstr, *) "Invalid pestride value specified for component: ",namestr, ' rootpe: ',rootpe, ' pestride: ', stride
+       read(cvalue,*) stride(i)
+       if (stride(i) < 1 .or. rootpe(i)+ntasks(i)*stride(i) > PetCount) then
+          write (msgstr, *) "Invalid pestride value specified for component: ",namestr, ' rootpe: ',rootpe(i), ' pestride: ', stride(i)
           call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
           return
        endif
 
-       if (allocated(petlist) .and. size(petlist) .ne. ntasks*nthrds) then
+       if(rootpe(i) + ntasks(i)*stride(i)*nthrds(i) > LocalPet) then
+          if(nthrds(i) > maxthreads) maxthreads = nthrds(i)
+       endif
+    enddo
+
+    do i=1,componentCount
+       ! info used to set component threading
+       info = ESMF_InfoCreate(rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+       if (allocated(petlist) .and. size(petlist) .ne. ntasks(i)*nthrds(i)) then
           deallocate(petlist)
        endif
        if(.not. allocated(petlist)) then
-          allocate(petlist(ntasks*nthrds))
+          allocate(petlist(ntasks(i)*nthrds(i)))
        endif
-
        cnt = 1
-       do ntask = rootpe, rootpe + nthrds*(ntasks*stride)-1, stride
-          petlist(cnt) = ntask
-          cnt = cnt + 1
-          if (ntask > PetCount) then
-             write (msgstr, *) "Invalid pelayout value specified for component: ",namestr, ' rootpe+ntasks: ',rootpe+ntasks, ' nthrds:',nthrds
-             call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
-             return
+       do ntask = rootpe(i), rootpe(i) + maxthreads*(ntasks(i)*stride(i))-1, stride(i)
+          if (modulo(ntask-rootpe(i), maxthreads) .lt. nthrds(i)) then
+             petlist(cnt) = ntask
+             cnt = cnt + 1
+             if (ntask > PetCount) then
+                write (msgstr, *) "Invalid pelayout value specified for component: ",namestr, ' rootpe+ntasks: ',rootpe(i)+ntasks(i), ' nthrds:',nthrds(i)
+                call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
+                return
+             endif
           endif
        enddo
 
        comps(i+1) = i+1
-
-!       call ESMF_AttributeSet(info, name="maxPeCountPerPet", value=nthrds, rc=rc)
-!       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       if (nthrds(i) .gt. 1) then
+          call ESMF_AttributeSet(info, name="maxPeCountPerPet", value=nthrds(i), rc=rc)
+          if (chkerr(rc,__LINE__,u_FILE_u)) return
+       endif
 
        if (trim(compLabels(i)) == 'MED') then
           med_id = i + 1
@@ -1139,8 +1150,8 @@ contains
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 #ifdef ATM_PRESENT
        elseif(trim(compLabels(i)) .eq. 'ATM') then
-          call ESMF_AttributeSet(info, name="maxPeCountPerPet", value=nthrds, rc=rc)
-          if (chkerr(rc,__LINE__,u_FILE_u)) return
+!          call ESMF_AttributeSet(info, name="maxPeCountPerPet", value=nthrds(i), rc=rc)
+!          if (chkerr(rc,__LINE__,u_FILE_u)) return
           call NUOPC_DriverAddComp(driver, trim(compLabels(i)), ATMSetServices, ATMSetVM, petList=petlist, comp=child, info=info, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 #endif
@@ -1216,6 +1227,7 @@ contains
 
        call ESMF_InfoDestroy(info, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
+
 
     enddo
 
