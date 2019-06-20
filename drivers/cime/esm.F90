@@ -180,6 +180,9 @@ contains
     call ReadAttributes(driver, config, "DRIVER_attributes::", formatprint=.true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    call NUOPC_CompAttributeSet(driver, name="Verbosity", value="low", rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
     call ReadAttributes(driver, config, "FLDS_attributes::", formatprint=.true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
@@ -876,6 +879,9 @@ contains
        if (chkerr(rc,__LINE__,u_FILE_u)) return
     end if
 
+    call NUOPC_CompAttributeSet(gcomp, name="Verbosity", value="low", rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
   end subroutine AddAttributes
 
   !================================================================================
@@ -1138,20 +1144,19 @@ contains
        enddo
 
        comps(i+1) = i+1
-       if (nthrds(i) .gt. 1) then
-          call ESMF_AttributeSet(info, name="maxPeCountPerPet", value=nthrds(i), rc=rc)
-          if (chkerr(rc,__LINE__,u_FILE_u)) return
-       endif
+
+       call ESMF_AttributeSet(info, name="maxPeCountPerPet", value=nthrds(i), rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
 
        if (trim(compLabels(i)) == 'MED') then
           med_id = i + 1
-          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), MEDSetServices, MEDSetVM, petList=petlist, &
-               comp=child, info=info, rc=rc)
+!          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), MEDSetServices!, MEDSetVM, petList=petlist, &
+!               comp=child, info=info, rc=rc)
+          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), MEDSetServices, petList=petlist, &
+               comp=child, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 #ifdef ATM_PRESENT
        elseif(trim(compLabels(i)) .eq. 'ATM') then
-!          call ESMF_AttributeSet(info, name="maxPeCountPerPet", value=nthrds(i), rc=rc)
-!          if (chkerr(rc,__LINE__,u_FILE_u)) return
           call NUOPC_DriverAddComp(driver, trim(compLabels(i)), ATMSetServices, ATMSetVM, petList=petlist, comp=child, info=info, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 #endif
@@ -1162,8 +1167,10 @@ contains
 #endif
 #ifdef OCN_PRESENT
        elseif(trim(compLabels(i)) .eq. 'OCN') then
-          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), OCNSetServices, OCNSetVM, PetList=petlist, comp=child, info=info, rc=rc)
+!          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), OCNSetServices!, OCNSetVM, PetList=petlist, comp=child, info=info, rc=rc)
+          call NUOPC_DriverAddComp(driver, trim(compLabels(i)), OCNSetServices, PetList=petlist, comp=child, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
+
 #endif
 #ifdef ICE_PRESENT
        elseif(trim(compLabels(i)) .eq. 'ICE') then
@@ -1209,8 +1216,8 @@ contains
           call ESMF_VMGet(vm, localPet=comp_comm_iam(i), rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-          call AddAttributes(child, driver, config, i+1, trim(compLabels(i)), inst_suffix, rc=rc)
-          if (chkerr(rc,__LINE__,u_FILE_u)) return
+!          call AddAttributes(child, driver, config, i+1, trim(compLabels(i)), inst_suffix, rc=rc)
+!          if (chkerr(rc,__LINE__,u_FILE_u)) return
 
           ! Attach methods for handling reading/writing of restart pointer file
           call ESMF_MethodAdd(child, label="GetRestartFileToWrite", &
