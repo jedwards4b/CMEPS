@@ -38,7 +38,7 @@ program esmApp
   ! Initiallize MPI
   !-----------------------------------------------------------------------------
 
-  call MPI_init_thread(required=MPI_THREAD_SERIALIZED, provided=provided, ierror=rc)
+  call MPI_init_thread(MPI_THREAD_SERIALIZED, provided, ierror=rc)
   if (rc .ne. MPI_SUCCESS) then
      write(*,*) 'ERROR in mpi_init_thread rc=', rc, ' provided = ',provided
      stop

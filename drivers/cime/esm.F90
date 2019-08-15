@@ -1131,6 +1131,10 @@ contains
           allocate(petlist(ntasks(i)*nthrds(i)))
        endif
        cnt = 1
+
+       namestr = toLower(compLabels(i))
+       if (namestr == 'med') namestr = 'cpl'
+
        do ntask = rootpe(i), rootpe(i) + maxthreads*(ntasks(i)*stride(i))-1, stride(i)
           if (modulo(ntask-rootpe(i), maxthreads) .lt. nthrds(i)) then
              petlist(cnt) = ntask
