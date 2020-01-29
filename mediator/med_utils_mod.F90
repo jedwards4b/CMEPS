@@ -8,8 +8,11 @@ module med_utils_mod
   public :: med_memcheck
   public :: med_utils_ChkErr
   public :: med_log_clock_advance
-
+#ifdef DEBUG
+  integer     , parameter :: memdebug_level=3
+#else
   integer     , parameter :: memdebug_level=1
+#endif
   character(*), parameter :: u_FILE_u = &
        __FILE__
 

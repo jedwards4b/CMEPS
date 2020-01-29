@@ -240,7 +240,7 @@ contains
           endif
 
           ! Write out next ymd/tod in place of curr ymd/tod because the
-          ! restart represents the time at end of the current timestep 
+          ! restart represents the time at end of the current timestep
           ! and that is where we want to start the next run.
 
           call med_io_write(restart_file, iam, start_ymd, 'start_ymd', whead=whead, wdata=wdata, rc=rc)
@@ -379,7 +379,6 @@ contains
     character(ESMF_MAXSTR) :: cpl_inst_tag   ! instance tag
     integer                :: dbrc
     logical                :: isPresent
-    character(len=*), parameter :: sp_str = 'str_undefined'
     character(len=*), parameter :: subname='(med_phases_restart_read)'
     !---------------------------------------
     call t_startf('MED:'//subname)
