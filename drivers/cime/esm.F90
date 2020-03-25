@@ -967,12 +967,14 @@ contains
     use ESMF                  , only : ESMF_RC_NOT_VALID, ESMF_LogSetError, ESMF_INFO, ESMF_InfoCreate
     use ESMF                  , only : ESMF_GridCompIsPetLocal, ESMF_MethodAdd, ESMF_VMIsCreated
     use ESMF                  , only : ESMF_AttributeSet, ESMF_VMBarrier, ESMF_InfoDestroy
+    use ESMF                  , only : ESMF_UTILSTRINGLOWERCASE
     use NUOPC                 , only : NUOPC_CompAttributeGet
     use NUOPC_Driver          , only : NUOPC_DriverAddComp
     use med_constants_mod     , only : dbug_flag => med_constants_dbug_flag, CS, CL
     use mpi                   , only : MPI_COMM_NULL
     use mct_mod               , only : mct_world_init
     use shr_pio_mod           , only : shr_pio_init2
+    use shr_string_mod           , only : toLower => shr_string_toLower
     use med                   , only : MedSetServices => SetServices, MEDSetVM => SetVM
 #ifdef ATM_PRESENT
     use atm_comp_nuopc        , only : ATMSetServices => SetServices, ATMSetVM => SetVM
