@@ -138,6 +138,8 @@ contains
     ! local variables
     character(len=CL) :: diro
     character(len=CL) :: logfile
+    character(len=2*CL) :: fullpath
+    logical :: opened = .false.
     !-----------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -149,14 +151,18 @@ contains
        if (chkerr(rc,__LINE__,u_FILE_u)) return
        call NUOPC_CompAttributeGet(gcomp, name="logfile", value=logfile, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-       open(newunit=logunit,file=trim(diro)//"/"//trim(logfile))
+       ! Check if the file is already open and open it if not
+       fullpath = trim(diro)//"/"//trim(logfile)
+       inquire(file=fullpath, opened=opened)
+       if (.not. opened) then
+          open(newunit=logunit,file=fullpath)
+       endif
     else
        logUnit = 6
     endif
-
-    call shr_file_setLogUnit (logunit)
-
+    if (.not. opened) then
+       call shr_file_setLogUnit (logunit)
+    endif
   end subroutine set_component_logging
 
 !===============================================================================

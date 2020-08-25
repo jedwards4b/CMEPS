@@ -350,7 +350,7 @@ contains
 
   end subroutine med_map_RouteHandles_init
 
-!================================================================================                   
+!================================================================================
 
   logical function med_map_RH_is_created_RH3d(RHs,n1,n2,mapindex,rc)
 
@@ -374,7 +374,7 @@ contains
 
   end function med_map_RH_is_created_RH3d
 
-!================================================================================                   
+!================================================================================
 
   logical function med_map_RH_is_created_RH1d(RHs,mapindex,rc)
 
@@ -385,37 +385,36 @@ contains
     integer                , intent(out)   :: rc
 
     ! local variables
-    integer :: rc1, rc2
     logical :: mapexists
     character(len=*), parameter :: subname=' (med_map_RH_is_created_RH1d: ) '
+    logical :: rh1, rh2, rh3, rh4
+
 
     rc  = ESMF_SUCCESS
-    rc1 = ESMF_SUCCESS
-    rc2 = ESMF_SUCCESS
+
+    rh1 = ESMF_RouteHandleIsCreated(RHs(mapnstod), rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    rh2 = ESMF_RouteHandleIsCreated(RHs(mapconsd), rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    rh3 = ESMF_RouteHandleIsCreated(RHs(mapconsf), rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    rh4 = ESMF_RouteHandleIsCreated(RHs(mapindex), rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     mapexists = .false.
-    if      (mapindex == mapnstod_consd .and. &
-             ESMF_RouteHandleIsCreated(RHs(mapnstod), rc=rc1) .and. &
-             ESMF_RouteHandleIsCreated(RHs(mapconsd), rc=rc2)) then
+    if      (mapindex == mapnstod_consd .and. rh1 .and. rh2) then
        mapexists = .true.
-    else if (mapindex == mapnstod_consf .and. &
-             ESMF_RouteHandleIsCreated(RHs(mapnstod), rc=rc1) .and. &
-             ESMF_RouteHandleIsCreated(RHs(mapconsf), rc=rc2)) then
+    else if (mapindex == mapnstod_consf .and. rh1 .and. rh3) then
        mapexists = .true.
-    else if (ESMF_RouteHandleIsCreated(RHs(mapindex), rc=rc1)) then
+    else if (rh4) then
        mapexists = .true.
     end if
 
     med_map_RH_is_created_RH1d = mapexists
 
-    rc = rc1
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    rc = rc2
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
   end function med_map_RH_is_created_RH1d
 
-!================================================================================                   
+!================================================================================
 
   subroutine med_map_Fractions_init(gcomp, n1, n2, FBSrc, FBDst, RouteHandle, rc)
 
@@ -662,7 +661,7 @@ contains
     type(ESMF_Field)      :: frac_field_dst
     real(R8), allocatable :: data_srctmp(:)
     real(R8), allocatable :: data_srctmp_1d(:)
-    real(R8), allocatable :: data_srctmp_2d(:,:)  
+    real(R8), allocatable :: data_srctmp_2d(:,:)
     real(R8), pointer     :: data_src_1d(:)
     real(R8), pointer     :: data_src_2d(:,:)
     real(R8), pointer     :: data_frac(:)
@@ -880,7 +879,7 @@ contains
              if (lrank == 1) then
                 data_src_1d(:) = data_srctmp_1d(:)
              elseif (lrank == 2) then
-                data_src_2d(:,:) = data_srctmp_2d(:,:) 
+                data_src_2d(:,:) = data_srctmp_2d(:,:)
              end if
 
              ! regrid fraction from source to dest
