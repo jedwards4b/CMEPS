@@ -9,7 +9,7 @@ program esmApp
   use ESMF,            only : ESMF_GridCompSetServices, ESMF_GridCompFinalize, ESMF_LogSet, ESMF_LogWrite
   use ESMF,            only : ESMF_GridCompDestroy, ESMF_LOGMSG_INFO, ESMF_GridComp, ESMF_GridCompRun
   use ESMF,            only : ESMF_GridCompFinalize, ESMF_GridCompCreate, ESMF_GridCompInitialize
-  use ESMF,            only : ESMF_LOGKIND_MULTI_ON_ERROR, ESMF_LogKind_Flag
+  use ESMF,            only : ESMF_LOGKIND_MULTI_ON_ERROR, ESMF_LogKind_Flag, ESMF_VM, ESMF_VMGet
 #ifdef USE_MPI2
   use mpi,             only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_BCAST, MPI_COMM_RANK
 #else
@@ -17,9 +17,8 @@ program esmApp
 #endif
   use NUOPC,           only : NUOPC_FieldDictionarySetup
   use ensemble_driver, only : SetServices
-  use shr_pio_mod,     only : shr_pio_init1
-  use shr_sys_mod,     only : shr_sys_abort     
-
+  use shr_pio_mod,     only : shr_pio_init1, shr_pio_finalize
+  use shr_sys_mod,     only : shr_sys_abort
   implicit none
 
   ! local variables
@@ -30,8 +29,9 @@ program esmApp
   logical                 :: create_esmf_pet_files = .false.
   integer                 :: iam, ier
   integer                 :: fileunit
-
-  namelist /debug_inparm / create_esmf_pet_files 
+  type(ESMF_VM)           :: vm
+  integer :: petcount, commsize
+  namelist /debug_inparm / create_esmf_pet_files
 
   !-----------------------------------------------------------------------------
   ! Initiallize MPI
@@ -51,14 +51,16 @@ program esmApp
 
   call shr_pio_init1(8, "drv_in", COMP_COMM)
 
+
   !-----------------------------------------------------------------------------
   ! Initialize ESMF
   !-----------------------------------------------------------------------------
 
   ! by default, ESMF_LOGKIND_MULTI_ON_ERROR does not create files PET[N*].ESMF_LogFile unless there is an error
   ! if want those files, comment out the following line and uncomment the line logkindflag = ESMF_LOGKIND_MULTI
-
   call mpi_comm_rank(COMP_COMM, iam, ier)
+  call mpi_comm_size(COMP_COMM, commsize, ier)
+
   if (iam==0) then
      open(newunit=fileunit, status="old", file="drv_in")
      read(fileunit, debug_inparm, iostat=ier)
@@ -76,11 +78,13 @@ program esmApp
   end if
 
   call ESMF_Initialize(mpiCommunicator=COMP_COMM, logkindflag=logkindflag, logappendflag=.false., &
-       defaultCalkind=ESMF_CALKIND_GREGORIAN, ioUnitLBound=5001, ioUnitUBound=5101, rc=rc)
+       defaultCalkind=ESMF_CALKIND_GREGORIAN, ioUnitLBound=5001, ioUnitUBound=5101, vm=vm, rc=rc)
   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
        line=__LINE__, &
        file=__FILE__)) &
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  call ESMF_VMGet(VM, petCount=petCount)
 
   call ESMF_LogSet(flush=.true.)
 
@@ -185,7 +189,7 @@ program esmApp
        line=__LINE__, &
        file=__FILE__)) &
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
-
+  call shr_pio_finalize()
   call ESMF_Finalize()
 
 end program

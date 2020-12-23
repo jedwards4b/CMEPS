@@ -693,7 +693,7 @@ contains
     call NUOPC_CompAttributeGet(driver, name="mediator_read_restart", value=cvalue, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) lvalue
-    if (.not. lvalue) then         
+    if (.not. lvalue) then
        call NUOPC_CompAttributeGet(driver, name=trim(attribute), value=cvalue, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
     end if
@@ -887,7 +887,7 @@ contains
     logical, allocatable           :: comp_iamin(:)
     character(len=5)               :: inst_suffix
     character(CL)                  :: cvalue
-    logical                        :: found_comp 
+    logical                        :: found_comp
     character(len=*), parameter    :: subname = "(esm_pelayout.F90:esm_init_pelayout)"
     !---------------------------------------
 
@@ -941,7 +941,7 @@ contains
        read(cvalue,*) ntasks
 
        if (ntasks < 0 .or. ntasks > PetCount) then
-          write (msgstr, *) "Invalid NTASKS value specified for component: ",namestr, ' ntasks: ',ntasks
+          write (msgstr, *) "Invalid NTASKS value specified for component: ",namestr, ' ntasks: ',ntasks,' PetCount: ',PetCount
           call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
           return
        endif
