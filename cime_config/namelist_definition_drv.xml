@@ -3569,7 +3569,7 @@
     </values>
   </entry>
 
-  <entry id="pio_root">
+  <entry id="pio_root" modify_via_xml="PIO_ROOT_CPL">
     <type>integer</type>
     <category>pio</category>
     <group>pio_default_inparm</group>
@@ -3581,7 +3581,7 @@
     </values>
   </entry>
 
-  <entry id="pio_stride">
+  <entry id="pio_stride" modify_via_xml="PIO_STRIDE_CPL">
     <type>integer</type>
     <category>pio</category>
     <group>pio_default_inparm</group>
@@ -3593,7 +3593,7 @@
     </values>
   </entry>
 
-  <entry id="pio_numiotasks">
+  <entry id="pio_numiotasks" modify_via_xml="PIO_NUMIOTASKS_CPL">
     <type>integer</type>
     <category>pio</category>
     <group>pio_default_inparm</group>
