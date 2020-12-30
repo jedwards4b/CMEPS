@@ -35,6 +35,14 @@
       <option name="wallclock"> 00:10:00 </option>
     </options>
   </test>
+  <test compset="A" grid="f19_g17_rx1" name="ERS_Vnuopc_Ln9_P140_A4x36">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="async"/>
+    </machines>
+    <options>
+      <option name="wallclock"> 00:10:00 </option>
+    </options>
+  </test>
   <test compset="A" grid="f19_g17_rx1" name="ERS_Vnuopc_Ln9_N3">
     <machines>
       <machine name="cheyenne" compiler="intel" category="nuopc"/>
@@ -130,6 +138,14 @@
       <option name="wallclock"> 00:40:00 </option>
     </options>
   </test>
+  <test compset="X" grid="f19_g17" name="ERS_Vnuopc_Ln9_P32_A4x9">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="async"/>
+    </machines>
+    <options>
+      <option name="wallclock"> 00:40:00 </option>
+    </options>
+  </test>
   <test compset="X" grid="f19_g17" name="ERS_Vmct_Ln9">
     <machines>
       <machine name="cheyenne" compiler="intel" category="mctcheck"/>
@@ -198,6 +214,14 @@
   <!-- C compsets -->
   <!-- ======================================= -->
 
+  <test compset="C" grid="T62_g17" name="ERS_Vnuopc_Ld5_P140_A4x36">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="async"/>
+    </machines>
+    <options>
+      <option name="wallclock"> 00:40:00 </option>
+    </options>
+  </test>
   <test compset="C" grid="T62_g17" name="ERS_Vnuopc_Ld5">
     <machines>
       <machine name="cheyenne" compiler="intel" category="nuopc"/>
@@ -319,6 +343,16 @@
       <option name="wallclock"> 00:10:00 </option>
     </options>
   </test>
+
+  <test compset="DTEST" grid="T62_g37" name="ERS_Vnuopc_Ln9_P70_A2x36" testmods="cice/nuopc_cap">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="async"/>
+    </machines>
+    <options>
+      <option name="wallclock"> 00:20:00 </option>
+    </options>
+  </test>
+
   <test compset="DTEST" grid="T62_g37" name="ERS_Vmct_Ld5" testmods="cice/nuopc_cap">
     <machines>
       <machine name="cheyenne" compiler="intel" category="mctcheck"/>
@@ -344,6 +378,17 @@
       <option name="wallclock"> 00:10:00 </option>
     </options>
   </test>
+
+  <test compset="F2000Nuopc" grid="f19_f19_mg17" name="ERS_Vnuopc_Ln5_P140_A4x36" testmods="cam/nuopc_cap">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="async"/>
+    </machines>
+    <options>
+      <option name="wallclock"> 00:30:00 </option>
+    </options>
+  </test>
+
+
   <test compset="F2000Nuopc" grid="f19_f19_mg17" name="ERS_Vmct_Ln5" testmods="cam/nuopc_cap">
     <machines>
       <machine name="cheyenne" compiler="intel" category="mctcheck"/>
@@ -369,6 +414,17 @@
       <option name="wallclock"> 00:10:00 </option>
     </options>
   </test>
+
+  <test compset="QPC4" grid="ne16_ne16_mg17" name="ERS_Vnuopc_Ln5_P70_A2x36" testmods="cam/nuopc_cap">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="async"/>
+    </machines>
+    <options>
+      <option name="wallclock"> 00:20:00 </option>
+    </options>
+  </test>
+
+
   <test compset="QPC4" grid="ne16_ne16_mg17" name="ERS_Vmct_Ln5" testmods="cam/nuopc_cap">
     <machines>
       <machine name="cheyenne" compiler="intel" category="mctcheck"/>
@@ -384,6 +440,14 @@
   <!-- I compsets -->
   <!-- ======================================= -->
 
+  <test compset="I2000Clm51Bgc" grid="f19_g17" name="ERS_Vnuopc_Ld5_P140_A4x36" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="async"/>
+    </machines>
+    <options>
+      <option name="wallclock"> 00:50:00 </option>
+    </options>
+  </test>
   <test compset="I2000Clm51Bgc" grid="f19_g17" name="ERS_Vnuopc_Ld5" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="nuopc"/>
@@ -422,18 +486,18 @@
   <test name="SMS_D_Ly1_Vnuopc" grid="f09_g17_gl4" compset="T1850G">
     <machines>
       <machine name="cheyenne" compiler="intel" category="nuopc">
-	<options>
-	  <option name="wallclock">0:20</option>
-	</options>
+        <options>
+          <option name="wallclock">0:20</option>
+        </options>
       </machine>
     </machines>
   </test>
   <test name="ERS_Ly3_Vnuopc" grid="f09_g17_gl4" compset="T1850G">
     <machines>
       <machine name="cheyenne" compiler="intel" category="nuopc">
-	<options>
-	  <option name="wallclock">0:20</option>
-	</options>
+        <options>
+          <option name="wallclock">0:20</option>
+        </options>
       </machine>
     </machines>
   </test>

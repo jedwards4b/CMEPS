@@ -3568,7 +3568,6 @@
       <value>$PIO_ASYNC_INTERFACE</value>
     </values>
   </entry>
-
   <entry id="pio_root" modify_via_xml="PIO_ROOT_CPL">
     <type>integer</type>
     <category>pio</category>
@@ -3577,7 +3576,7 @@
       Root process of pio async mpi tasks, used only with pio_async_interface=true
     </desc>
     <values>
-      <value>0</value>
+      <value>$PIO_ROOT_CPL</value>
     </values>
   </entry>
 
@@ -3589,11 +3588,11 @@
       Stride of tasks in IO, used only with pio_async_interface=true
     </desc>
     <values>
-      <value>1</value>
+      <value>$PIO_STRIDE_CPL</value>
     </values>
   </entry>
 
-  <entry id="pio_numiotasks" modify_via_xml="PIO_NUMIOTASKS_CPL">
+  <entry id="pio_numiotasks" modify_via_xml="PIO_NUMTASKS_CPL">
     <type>integer</type>
     <category>pio</category>
     <group>pio_default_inparm</group>
@@ -3601,7 +3600,7 @@
       Number of tasks in IO, used only with pio_async_interface=true
     </desc>
     <values>
-      <value>1</value>
+      <value>$PIO_NUMTASKS_CPL</value>
     </values>
   </entry>
 
@@ -3616,6 +3615,19 @@
     </desc>
     <values>
       <value>$PIO_DEBUG_LEVEL</value>
+    </values>
+  </entry>
+
+  <entry id="pio_rearranger" modify_via_xml="PIO_REARRANGER_CPL">
+    <type>integer</type>
+    <category>pio</category>
+    <group>pio_default_inparm</group>
+    <valid_values>1</valid_values>
+    <desc>
+      PIO_REARRANGER when pio_async_interface is TRUE, currently only BOX is supported
+    </desc>
+    <values>
+      <value>1</value>
     </values>
   </entry>
 
