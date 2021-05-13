@@ -20,7 +20,7 @@ module med_diag_mod
   use ESMF                  , only : ESMF_LogWrite, ESMF_LOGMSG_INFO, ESMF_SUCCESS
   use ESMF                  , only : ESMF_FAILURE,  ESMF_LOGMSG_ERROR
   use ESMF                  , only : ESMF_GridComp, ESMF_Clock, ESMF_Time
-  use ESMF                  , only : ESMF_VM, ESMF_VMReduce, ESMF_REDUCE_SUM
+  use ESMF                  , only : ESMF_VM, ESMF_VMAllReduce, ESMF_REDUCE_SUM
   use ESMF                  , only : ESMF_GridCompGet, ESMF_ClockGet, ESMF_TimeGet, ESMF_ClockGetNextTime
   use ESMF                  , only : ESMF_Alarm, ESMF_ClockGetAlarm, ESMF_AlarmIsRinging, ESMF_AlarmRingerOff
   use ESMF                  , only : ESMF_FieldBundle, ESMF_Field, ESMF_FieldGet
@@ -49,6 +49,8 @@ module med_diag_mod
   public  :: med_phases_diag_ocn
   public  :: med_phases_diag_ice_ice2med
   public  :: med_phases_diag_ice_med2ice
+  public  :: med_diag_restart_write
+  public  :: med_diag_restart_read
 
   private :: med_diag_sum_master
   private :: med_diag_print_atm
@@ -227,7 +229,6 @@ module med_diag_mod
   real(r8), allocatable :: budget_local  (:,:,:) ! local sum, valid on all pes
   real(r8), allocatable :: budget_global (:,:,:) ! global sum, valid only on root pe
   real(r8), allocatable :: budget_counter(:,:,:) ! counter, valid only on root pe
-  real(r8), allocatable :: budget_global_1d(:)   ! needed for ESMF_VMReduce call
 
   character(len=*), parameter :: modName   = "(med_diag) "
   character(len=*), parameter :: u_FILE_u  = &
@@ -379,7 +380,6 @@ contains
     allocate(budget_local    (f_size , c_size , p_size)) ! local sum, valid on all pes
     allocate(budget_global   (f_size , c_size , p_size)) ! global sum, valid only on root pe
     allocate(budget_counter  (f_size , c_size , p_size)) ! counter, valid only on root pe
-    allocate(budget_global_1d(f_size * c_size * p_size)) ! needed for ESMF_VMReduce call
 
   end subroutine med_diag_init
 
@@ -543,6 +543,8 @@ contains
     integer       :: c_size  ! number of component send/recvs
     integer       :: f_size  ! number of fields
     integer       :: p_size  ! number of period types
+    real(r8), allocatable :: budget_global_1d (:) !
+
     character(*), parameter :: subName = '(med_diag_sum_master) '
     ! ------------------------------------------------------------------
 
@@ -557,14 +559,18 @@ contains
     p_size = size(budget_diags%periods)
 
     count  = size(budget_global)
+
+    allocate(budget_global_1d(count)) ! needed for ESMF_VMReduce call
     budget_global_1d(:) = 0.0_r8
 
-    call ESMF_VMReduce(vm, reshape(budget_local,(/count/)) , budget_global_1d, count, ESMF_REDUCE_SUM, 0, rc=rc)
+    call ESMF_VMAllReduce(vm, reshape(budget_local, (/count/)), budget_global_1d, count, ESMF_REDUCE_SUM, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    budget_global = reshape(budget_global_1d,(/f_size,c_size,p_size/))
+    print *,__FILE__,__LINE__,sum(budget_global)
+!   There may be a budget balance read in from restart file so we need to add to that
+    budget_global = budget_global + reshape(budget_global_1d,(/f_size,c_size,p_size/))
 
     budget_local(:,:,period_inst) = 0.0_r8
-
+    deallocate(budget_global_1d)
     call t_stopf('MED:'//subname)
 
   end subroutine med_diag_sum_master
@@ -2548,5 +2554,53 @@ contains
     end if
 
   end subroutine add_to_budget_diag
+
+  subroutine med_diag_restart_write(gcomp, restart_file, iam, whead, wdata, rc)
+    use med_io_mod, only: med_io_write
+    type(ESMF_GridComp) :: gcomp
+    character(len=*), intent(in) :: restart_file
+    integer, intent(in) :: iam
+    logical, intent(in) :: whead
+    logical, intent(in) :: wdata
+
+    integer, intent(out) :: rc
+    character(len=*), parameter :: dimnames(3) = (/'nflds','ncmps','npers'/)
+    integer :: dimid(3)
+    integer :: fh
+
+    rc = ESMF_SUCCESS
+    if(wdata) then
+       call med_diag_sum_master(gcomp, rc)
+    endif
+    call med_io_write(restart_file, iam, period_inst, 'period_inst', whead=whead, wdata=wdata, rc=rc)
+    call med_io_write(restart_file, iam, period_day, 'period_day', whead=whead, wdata=wdata, rc=rc)
+    call med_io_write(restart_file, iam, period_mon, 'period_mon', whead=whead, wdata=wdata, rc=rc)
+    call med_io_write(restart_file, iam, period_ann, 'period_ann', whead=whead, wdata=wdata, rc=rc)
+    call med_io_write(restart_file, iam, period_inf, 'period_inf', whead=whead, wdata=wdata, rc=rc)
+    call med_io_write(restart_file, iam, dimnames, budget_global, 'budgets', whead=whead, wdata=wdata, rc=rc)
+    call med_io_write(restart_file, iam, dimnames, int(budget_counter), 'budget_counter', whead=whead, wdata=wdata, rc=rc)
+
+  end subroutine med_diag_restart_write
+
+  subroutine med_diag_restart_read(restart_file, vm, iam, rc)
+    use med_io_mod, only: med_io_read
+    character(len=*), intent(IN):: restart_file
+    type(ESMF_VM)          :: vm
+    integer, intent(in) :: iam
+    integer, intent(out) :: rc
+
+    call med_io_read(restart_file, vm, iam, period_inst, 'period_inst', rc)
+    call med_io_read(restart_file, vm, iam, period_day, 'period_day', rc)
+    call med_io_read(restart_file, vm, iam, period_mon, 'period_mon', rc)
+    call med_io_read(restart_file, vm, iam, period_inf, 'period_inf', rc)
+
+    call med_io_read(restart_file, vm, iam, budget_global, 'budgets', rc)
+    call med_io_read(restart_file, vm, iam, budget_counter, 'budget_counter', rc)
+
+
+
+  end subroutine med_diag_restart_read
+
+
 
 end module med_diag_mod
