@@ -138,6 +138,7 @@ contains
     use NUOPC_Model, only : NUOPC_ModelGet
     use med_io_mod , only : med_io_write, med_io_wopen, med_io_enddef
     use med_io_mod , only : med_io_close, med_io_date2yyyymmdd, med_io_sec2hms
+    use med_diag_mod, only: med_diag_restart_write
 
     ! Input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -179,9 +180,12 @@ contains
     real(R8)                   :: tbnds(2)       ! CF1.0 time bounds
     logical                    :: whead,wdata    ! for writing restart/restart cdf files
     integer                    :: iam            ! vm stuff
+    integer                    :: file_ind = 0
     character(ESMF_MAXSTR)     :: tmpstr
     logical                    :: isPresent
+    logical                    :: isSet
     logical                    :: first_time = .true.
+    logical                    :: do_budgets = .false.
     character(len=*), parameter :: subname='(med_phases_restart_write)'
     !---------------------------------------
 
@@ -321,6 +325,14 @@ contains
           close(unitn)
        endif
 
+       call NUOPC_CompAttributeGet(gcomp, name="do_budgets", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       if (isPresent .and. isSet) then
+          if (trim(cvalue) .eq. '.true.') then
+             do_budgets = .true.
+          endif
+       endif
+
        call ESMF_LogWrite(trim(subname)//": write "//trim(restart_file), ESMF_LOGMSG_INFO)
        call med_io_wopen(restart_file, vm, iam, clobber=.true.)
 
@@ -349,6 +361,9 @@ contains
                   whead=whead, wdata=wdata, tbnds=tbnds, rc=rc)
              if (ChkErr(rc,__LINE__,u_FILE_u)) return
           endif
+
+          call med_diag_restart_write(gcomp, restart_file, iam, whead=whead, wdata=wdata, rc=rc)
+
 
           ! Write out next ymd/tod in place of curr ymd/tod because the
           ! restart represents the time at end of the current timestep
@@ -465,6 +480,7 @@ contains
     use ESMF       , only : ESMF_FieldBundleIsCreated, ESMF_TimeGet
     use NUOPC      , only : NUOPC_CompAttributeGet
     use med_io_mod , only : med_io_read
+    use med_diag_mod, only: med_diag_restart_read
 
     ! Input/output variables
     type(ESMF_GridComp)              :: gcomp
@@ -485,6 +501,7 @@ contains
     character(ESMF_MAXSTR) :: restart_pfile  ! Local path to restart pointer filename
     character(ESMF_MAXSTR) :: cpl_inst_tag   ! instance tag
     logical                :: isPresent
+
     character(len=*), parameter :: sp_str = 'str_undefined'
     character(len=*), parameter :: subname='(med_phases_restart_read)'
     !---------------------------------------
@@ -571,6 +588,9 @@ contains
     call med_io_read(restart_file, vm, iam, is_local%wrap%FBExpAccumCnt, dname='ExpAccumCnt', rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call med_io_read(restart_file, vm, iam, is_local%wrap%FBImpAccumCnt, dname='ImpAccumCnt', rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call med_diag_restart_read(restart_file, vm, iam, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     do n = 1,ncomps
