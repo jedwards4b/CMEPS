@@ -565,9 +565,9 @@ contains
 
     call ESMF_VMAllReduce(vm, reshape(budget_local, (/count/)), budget_global_1d, count, ESMF_REDUCE_SUM, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    print *,__FILE__,__LINE__,sum(budget_global)
 !   There may be a budget balance read in from restart file so we need to add to that
     budget_global = budget_global + reshape(budget_global_1d,(/f_size,c_size,p_size/))
+!    budget_global = reshape(budget_global_1d,(/f_size,c_size,p_size/))
 
     budget_local(:,:,period_inst) = 0.0_r8
     deallocate(budget_global_1d)
@@ -2354,6 +2354,7 @@ contains
     ice_area_sh = data(f_area,c_ish_recv,ip)
     sum_area    = atm_area + lnd_area + ocn_area + ice_area_nh + ice_area_sh
     write(diagunit,FA1) budget_diags%fields(f_area)%name, atm_area, lnd_area, ocn_area, ice_area_nh, ice_area_sh, sum_area
+
     ! write out net heat budgets
 
     write(diagunit,*) ' '
@@ -2579,6 +2580,7 @@ contains
     call med_io_write(restart_file, iam, period_inf, 'period_inf', whead=whead, wdata=wdata, rc=rc)
     call med_io_write(restart_file, iam, dimnames, budget_global, 'budgets', whead=whead, wdata=wdata, rc=rc)
     call med_io_write(restart_file, iam, dimnames, int(budget_counter), 'budget_counter', whead=whead, wdata=wdata, rc=rc)
+    budget_global = 0.0_R8
 
   end subroutine med_diag_restart_write
 
@@ -2596,7 +2598,7 @@ contains
 
     call med_io_read(restart_file, vm, iam, budget_global, 'budgets', rc)
     call med_io_read(restart_file, vm, iam, budget_counter, 'budget_counter', rc)
-
+    budget_counter = budget_counter + 1.0_r8
 
 
   end subroutine med_diag_restart_read
