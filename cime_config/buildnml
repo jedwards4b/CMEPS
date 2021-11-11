@@ -533,7 +533,7 @@ def buildnml(case, caseroot, component):
     #   Do a check here of ESMF VERSION, requires 8.1.0 or newer (8.2.0 or newer for esmf_aware_threading)
     esmf_aware_threading = case.get_value("ESMF_AWARE_THREADING")
     esmfmkfile = os.getenv("ESMFMKFILE")
-    expect(esmfmkfile and os.path.isfile(esmfmkfile),"ESMFMKFILE not found {}".format(esmfmkfile))
+    expect(esmfmkfile and os.path.exists(esmfmkfile),"ESMFMKFILE not found {}".format(esmfmkfile))
     with open(esmfmkfile, 'r', encoding="utf-8") as f:
         major = None
         minor = None

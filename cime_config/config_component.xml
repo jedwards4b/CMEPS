@@ -11,7 +11,7 @@
 
   <entry id="COMP_CLASSES">
     <type>char</type>
-    <default_value>CPL,ATM,LND,ICE,OCN,ROF,GLC,WAV,ESP</default_value>
+    <default_value>CPL,ATM,LND,ICE,OCN,ROF,GLC,WAV,ESP,DOC</default_value>
     <file>env_case.xml</file>
     <group>case_comp</group>
     <desc>List of component classes supported by this driver</desc>
@@ -1734,6 +1734,7 @@
       <value compclass="ROF"> $MAX_MPITASKS_PER_NODE</value>
       <value compclass="LND"> $MAX_MPITASKS_PER_NODE</value>
       <value compclass="ESP"> $MAX_MPITASKS_PER_NODE</value>
+      <value compclass="DOC"> $MAX_MPITASKS_PER_NODE</value>
     </values>
     <group>mach_pes</group>
     <file>env_mach_pes.xml</file>
@@ -1751,6 +1752,7 @@
       <value compclass="ROF"> 0</value>
       <value compclass="LND"> 0</value>
       <value compclass="ESP"> 0</value>
+      <value compclass="DOC"> 0</value>
     </values>
     <group>mach_pes</group>
     <file>env_mach_pes.xml</file>
@@ -1769,6 +1771,7 @@
       <value compclass="ROF">1</value>
       <value compclass="LND">1</value>
       <value compclass="ESP">1</value>
+      <value compclass="DOC">1</value>
     </values>
     <group>mach_pes</group>
     <file>env_mach_pes.xml</file>
@@ -1787,6 +1790,7 @@
       <value compclass="ROF">0</value>
       <value compclass="LND">0</value>
       <value compclass="ESP">0</value>
+      <value compclass="DOC">0</value>
     </values>
     <group>mach_pes</group>
     <file>env_mach_pes.xml</file>
@@ -1826,6 +1830,7 @@
       <value compclass="ROF">1</value>
       <value compclass="LND">1</value>
       <value compclass="ESP">1</value>
+      <value compclass="DOC">1</value>
     </values>
     <group>mach_pes</group>
     <file>env_mach_pes.xml</file>
@@ -2033,6 +2038,7 @@
       <value compclass="ROF">default</value>
       <value compclass="LND">default</value>
       <value compclass="ESP">default</value>
+      <value compclass="DOC">default</value>
     </values>
   </entry>
 
@@ -2054,6 +2060,7 @@
       <value compclass="ROF">64bit_offset</value>
       <value compclass="LND">64bit_offset</value>
       <value compclass="ESP">64bit_offset</value>
+      <value compclass="DOC">64bit_offset</value>
     </values>
   </entry>
 
@@ -2075,6 +2082,7 @@
       <value compclass="ROF">$MAX_MPITASKS_PER_NODE</value>
       <value compclass="LND">$MAX_MPITASKS_PER_NODE</value>
       <value compclass="ESP">$MAX_MPITASKS_PER_NODE</value>
+      <value compclass="DOC">$MAX_MPITASKS_PER_NODE</value>
     </values>
   </entry>
 
@@ -2094,6 +2102,7 @@
       <value compclass="ROF">2</value>
       <value compclass="LND">2</value>
       <value compclass="ESP">2</value>
+      <value compclass="DOC">2</value>
     </values>
   </entry>
 
@@ -2112,6 +2121,7 @@
       <value component="ROF">1</value>
       <value component="LND">1</value>
       <value component="ESP">1</value>
+      <value component="DOC">1</value>
     </values>
   </entry>
 
@@ -2133,6 +2143,7 @@
       <value compclass="ROF">-99</value>
       <value compclass="LND">-99</value>
       <value compclass="ESP">-99</value>
+      <value compclass="DOC">-99</value>
     </values>
   </entry>
 
