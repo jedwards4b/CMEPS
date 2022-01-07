@@ -40,67 +40,72 @@
 
   <compset>
     <alias>AA</alias>
-    <lname>2000_DATM%NYF_DLND%LCPL_DICE%SSMI_DOCN%DOM_DROF%NYF_SGLC_DWAV</lname>
+    <lname>tim:2000_wav:DWAV%CLIMO_rof:DROF%NYF_atm:DATM%NYF_lnd:DLND%LCPL_ice:DICE%SSMI_ocn:DOCN%DOM</lname>
   </compset>
 
   <compset>
     <alias>A</alias>
-    <lname>2000_DATM%NYF_SLND_DICE%SSMI_DOCN%DOM_DROF%NYF_SGLC_SWAV</lname>
+    <lname>scn:2000_atm:DATM%NYF_ice:DICE%SSMI_ocn:DOCN%DOM_rof:DROF%NYF</lname>
+  </compset>
+
+  <compset>
+    <alias>AAIO</alias>
+    <lname>scn:2000_atm:DATM%NYF_ice:DICE%SSMI_ocn:DOCN%DOM_rof:DROF%NYF_aio:APIO</lname>
   </compset>
 
   <compset>
     <alias>ADSOM</alias>
-    <lname>2000_DATM%NYF_SLND_DICE%SSMI_DOCN%SOM_DROF%NYF_SGLC_SWAV_TEST</lname>
+    <lname>scn:2000_atm:DATM%NYF_ice:DICE%SSMI_ocn:DOCN%SOM_rof:DROF%NYF_TEST</lname>
   </compset>
 
   <compset>
     <alias>ADSOMAQP</alias>
-    <lname>2000_DATM%NYF_SLND_SICE_DOCN%SOMAQP_SROF_SGLC_SWAV</lname>
+    <lname>scn:2000_atm:DATM%NYF_ocn:DOCN%SOMAQP</lname>
   </compset>
 
   <compset>
     <alias>ADAQP3</alias>
-    <lname>2000_DATM%NYF_SLND_SICE_DOCN%AQP3_SROF_SGLC_SWAV</lname>
+    <lname>scn:2000_atm:DATM%NYF_ocn:DOCN%AQP3</lname>
   </compset>
 
   <compset>
     <alias>ADAQPFILE</alias>
-    <lname>2000_DATM%NYF_SLND_SICE_DOCN%AQPFILE_SROF_SGLC_SWAV</lname>
+    <lname>scn:2000_atm:DATM%NYF_ocn:DOCN%AQPFILE</lname>
   </compset>
 
   <compset>
     <alias>A1850DLND</alias>
-    <lname>1850_SATM_DLND%SCPL_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>scn:1850_lnd:DLND%SCPL</lname>
   </compset>
 
   <compset>
     <alias>ADWAV</alias>
-    <lname>2000_SATM_SLND_SICE_SOCN_SROF_SGLC_DWAV%CLIMO</lname>
+    <lname>scn:2000_wav:DWAV%CLIMO</lname>
   </compset>
 
   <compset>
     <alias>ADESP</alias>
-    <lname>2000_DATM%NYF_SLND_SICE_DOCN%SOMAQP_SROF_SGLC_SWAV_DESP%NOOP</lname>
+    <lname>scn:2000_atm:DATM%NYF_ocn:DOCN%SOMAQP_esp:DESP%NOOP</lname>
   </compset>
 
   <compset>
     <alias>ADESP_TEST</alias>
-    <lname>2000_DATM%NYF_SLND_SICE_DOCN%SOMAQP_SROF_SGLC_SWAV_DESP%TEST</lname>
+    <lname>scn:2000_atm:DATM%NYF_ocn:DOCN%SOMAQP_esp:DESP%TEST</lname>
   </compset>
 
   <compset>
     <alias>AIAF</alias>
-    <lname>2000_DATM%IAF_SLND_DICE%IAF_DOCN%IAF_DROF%IAF_SGLC_SWAV</lname>
+    <lname>scn:2000_atm:DATM%IAF_ice:DICE%IAF_ocn:DOCN%IAF_rof:DROF%IAF</lname>
   </compset>
 
   <compset>
     <alias>S</alias>
-    <lname>2000_SATM_SLND_SICE_SOCN_SROF_SGLC_SWAV_SESP</lname>
+    <lname>scn:2000</lname>
   </compset>
 
   <compset>
     <alias>X</alias>
-    <lname>2000_XATM_XLND_XICE_XOCN_XROF_XGLC_XWAV</lname>
+    <lname>scn:2000_atm:XATM_lnd:XLND_ice:XICE_ocn:XOCN_rof:XROF_glc:XGLC_wav:XWAV</lname>
   </compset>
 
 </compsets>
