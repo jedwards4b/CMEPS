@@ -1748,6 +1748,7 @@
       <value compclass="ROF"> $MAX_MPITASKS_PER_NODE</value>
       <value compclass="LND"> $MAX_MPITASKS_PER_NODE</value>
       <value compclass="ESP"> $MAX_MPITASKS_PER_NODE</value>
+      <value compclass="AIO"> $MAX_MPITASKS_PER_NODE</value>
     </values>
     <group>mach_pes</group>
     <file>env_mach_pes.xml</file>
@@ -1783,6 +1784,7 @@
       <value compclass="ROF">1</value>
       <value compclass="LND">1</value>
       <value compclass="ESP">1</value>
+      <value compclass="AIO">1</value>
     </values>
     <group>mach_pes</group>
     <file>env_mach_pes.xml</file>
@@ -1801,6 +1803,7 @@
       <value compclass="ROF">0</value>
       <value compclass="LND">0</value>
       <value compclass="ESP">0</value>
+      <value compclass="AIO">-1</value>
     </values>
     <group>mach_pes</group>
     <file>env_mach_pes.xml</file>
@@ -1840,6 +1843,7 @@
       <value compclass="ROF">1</value>
       <value compclass="LND">1</value>
       <value compclass="ESP">1</value>
+      <value compclass="AIO">1</value>
     </values>
     <group>mach_pes</group>
     <file>env_mach_pes.xml</file>
