@@ -304,7 +304,7 @@ contains
             trim(nexttimestr),'.nc'
 
        if (mastertask) then
-          restart_pfile = "rpointer.cpl"//cpl_inst_tag
+          restart_pfile = "rpointer."//trim(nexttimestr)//".cpl"//cpl_inst_tag
           call ESMF_LogWrite(trim(subname)//" write rpointer file = "//trim(restart_pfile), ESMF_LOGMSG_INFO)
           open(newunit=unitn, file=restart_pfile, form='FORMATTED')
           write(unitn,'(a)') trim(restart_file)
@@ -543,7 +543,7 @@ contains
     endif
 
     ! Get the restart file name from the pointer file
-    restart_pfile = "rpointer.cpl"//cpl_inst_tag
+    restart_pfile = "rpointer."//trim(currtimestr)//".cpl"//cpl_inst_tag
     if (mastertask) then
        call ESMF_LogWrite(trim(subname)//" read rpointer file = "//trim(restart_pfile), ESMF_LOGMSG_INFO)
        open(newunit=unitn, file=restart_pfile, form='FORMATTED', status='old', iostat=ierr)
