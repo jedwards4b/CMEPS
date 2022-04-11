@@ -370,6 +370,27 @@
     </desc>
   </entry>
 
+  <entry id="RPOINTER_TIMESTAMP_DATE">
+    <type>integer</type>
+    <default_value>-999</default_value>
+    <group>run_begin_stop_restart</group>
+    <file>env_run.xml</file>
+    <desc>
+      yyyymmdd date of timestamped rpointer file to use when CONTINUE_RUN=TRUE, if less than 0 uses the most recent rpointer in the
+      run directory.
+    </desc>
+  </entry>
+  <entry id="RPOINTER_TIMESTAMP_TOD">
+    <type>char</type>
+    <default_value>00000</default_value>
+    <group>run_begin_stop_restart</group>
+    <file>env_run.xml</file>
+    <desc>
+      yyyymmdd time of timestamped rpointer file to use when CONTINUE_RUN=TRUE, if not set uses the most recent rpointer in the
+      run directory.
+    </desc>
+  </entry>
+
   <entry id="REST_OPTION">
     <type>char</type>
     <valid_values>none,never,nsteps,nstep,nseconds,nsecond,nminutes,nminute,nhours,nhour,ndays,nday,nmonths,nmonth,nyears,nyear,date,end</valid_values>
