@@ -371,15 +371,15 @@
   </entry>
 
   <entry id="RPOINTER_TIMESTAMP_DATE">
-    <type>integer</type>
-    <default_value>-999</default_value>
+    <type>char</type>
+    <default_value>0000-00-00</default_value>
     <group>run_begin_stop_restart</group>
     <file>env_run.xml</file>
     <desc>
-      yyyymmdd date of timestamped rpointer file to use when CONTINUE_RUN=TRUE, if less than 0 uses the most recent rpointer in the
-      run directory.
+      Date of timestamped rpointer file to use when CONTINUE_RUN=TRUE (yyyy-mm-dd)
     </desc>
   </entry>
+
   <entry id="RPOINTER_TIMESTAMP_TOD">
     <type>char</type>
     <default_value>00000</default_value>

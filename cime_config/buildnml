@@ -14,7 +14,7 @@ from standard_script_setup import *
 from CIME.case import Case
 from CIME.nmlgen import NamelistGenerator
 from CIME.utils import expect
-from CIME.utils import get_model, get_time_in_seconds, get_timestamp
+from CIME.utils import get_model, get_time_in_seconds, get_timestamp, ls_sorted_by_mtime
 from CIME.buildnml import create_namelist_infile, parse_input
 from CIME.XML.files import Files
 #pylint: disable=undefined-variable
@@ -284,7 +284,19 @@ def _create_drv_namelists(case, infile, confdir, nmlgen, files):
         valid_comps_string = " ".join(valid_comps)
         nmlgen.set_value("component_list", value=valid_comps_string.replace("CPL","MED"))
     # the driver restart pointer will look like a mediator is present even if it is not
-    nmlgen.set_value("drv_restart_pointer", value="rpointer.cpl")
+    rpointer_date = case.get_value("RPOINTER_TIMESTAMP_DATE")
+    rpointer_tod  = case.get_value("RPOINTER_TIMESTAMP_TOD")
+    rundir = case.get_value("RUNDIR")
+    rpfilename = "unset"
+    if rpointer_date != "0000-00-00":
+        rpfilename = f"rpointer.{rpointer_date}-{rpointer_tod}.cpl"
+    else:
+        filelist = ls_sorted_by_mtime(rundir)
+        for name in filelist:
+            if name.startswith("rpointer") and ".cpl" in name:
+                rpfilename = name
+
+    nmlgen.set_value("drv_restart_pointer", value=rpfilename)
 
     logger.info("Writing nuopc_runconfig for components {}".format(valid_comps))
     nuopc_config_file = os.path.join(confdir, "nuopc.runconfig")
