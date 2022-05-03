@@ -802,6 +802,10 @@ contains
     use ESMF         , only : ESMF_RC_NOT_VALID, ESMF_LogSetError, ESMF_Info, ESMF_InfoSet
     use ESMF         , only : ESMF_GridCompIsPetLocal, ESMF_MethodAdd, ESMF_UtilStringLowerCase
     use ESMF         , only : ESMF_InfoCreate, ESMF_InfoDestroy
+!    use ESMF         , only : ESMF_Kind_i4, ESMF_VMAllReduce, ESMF_REDUCE_MAX
+    use MPI          , only : MPI_AllReduce, MPI_INTEGER, MPI_MAX, MPI_IN_PLACE
+
+
     use NUOPC        , only : NUOPC_CompAttributeGet
     use NUOPC_Driver , only : NUOPC_DriverAddComp
 #ifndef NO_MPI2
@@ -869,7 +873,7 @@ contains
 
     ! local variables
     type(ESMF_GridComp)            :: child
-    type(ESMF_VM)                  :: vm
+    type(ESMF_VM)                  :: vm, driver_vm
     type(ESMF_Config)              :: config
     type(ESMF_Info)                :: info
     integer                        :: componentcount
@@ -882,7 +886,8 @@ contains
     character(len=32), allocatable :: compLabels(:)
     character(CS)                  :: namestr
     character(CL)                  :: msgstr
-    integer, allocatable           :: petlist(:)
+    integer, allocatable               :: petlist(:)
+!    integer, allocatable, target   :: comppetlists(:,:)
     integer, pointer               :: comms(:), comps(:)
     integer                        :: Global_Comm
     logical                        :: isPresent
@@ -898,13 +903,13 @@ contains
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
 
-    call ESMF_GridCompGet(driver, vm=vm, config=config, rc=rc)
+    call ESMF_GridCompGet(driver, vm=driver_vm, config=config, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     call ReadAttributes(driver, config, "PELAYOUT_attributes::", rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    call ESMF_VMGet(vm, petCount=petCount, mpiCommunicator=Global_Comm, rc=rc)
+    call ESMF_VMGet(driver_vm, petCount=petCount, mpiCommunicator=Global_Comm, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     componentCount = ESMF_ConfigGetLen(config,label="component_list:", rc=rc)
@@ -941,7 +946,7 @@ contains
     comps(1) = 1
     comms = MPI_COMM_NULL
     comms(1) = Global_Comm
-
+    
     maxthreads = 1
     do i=1,componentCount
        namestr = ESMF_UtilStringLowerCase(compLabels(i))
@@ -952,7 +957,12 @@ contains
 
        if(nthrds > maxthreads) maxthreads = nthrds
     enddo
-
+!#ifdef ESMF_AWARE_THREADING
+!    allocate(comppetlists(maxthreads*petcount, componentCount))
+!#else
+!    allocate(comppetlists(petcount, componentCount))
+!#endif
+!    comppetlists = 0
     do i=1,componentCount
        namestr = ESMF_UtilStringLowerCase(compLabels(i))
        if (namestr == 'med') namestr = 'cpl'
@@ -1011,8 +1021,10 @@ contains
        endif
        if(.not. allocated(petlist)) then
 #ifdef ESMF_AWARE_THREADING
+!          petlist => comppetlists(1:nthrds*ntasks,i)
           allocate(petlist(ntasks*nthrds))
 #else
+!          petlist => comppetlists(1:ntasks,i)
           allocate(petlist(ntasks))
 #endif
        endif
@@ -1047,6 +1059,7 @@ contains
 #endif
 #ifdef ATM_PRESENT
        if (trim(compLabels(i)) .eq. 'ATM') then
+          print *,__FILE__,__LINE__,petlist
 #ifdef ESMF_AWARE_THREADING
           call NUOPC_DriverAddComp(driver, trim(compLabels(i)), ATMSetServices, ATMSetVM, &
                petList=petlist, comp=child, info=info, rc=rc)
@@ -1182,12 +1195,15 @@ contains
     enddo
     ! Read in component dependent PIO parameters and initialize
     ! IO systems
-    call shr_pio_component_init(driver, size(comps), rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
+!    call ESMF_VMAllReduce(driver_vm, comppetlists, comppetlists, size(comppetlists), ESMF_REDUCE_MAX, rc=rc)
+!    if (chkerr(rc,__LINE__,u_FILE_u)) return
+!    call MPI_AllReduce(MPI_IN_PLACE, comppetlists, size(comppetlists), MPI_INTEGER, MPI_MAX, Global_COMM, rc)
 
-    ! Initialize MCT (this is needed for data models and cice prescribed capability)
+    ! Initialize MCT (this is needed for some component models - which ones?)
     call mct_world_init(componentCount+1, GLOBAL_COMM, comms, comps)
 
+    call shr_pio_component_init(driver, size(comps), rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     deallocate(petlist, comms, comps, comp_iamin, comp_comm_iam)
 
