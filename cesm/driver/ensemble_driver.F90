@@ -17,7 +17,7 @@ module Ensemble_driver
 
   public  :: SetServices
   private :: SetModelServices
-  private :: InitializeP1
+!  private :: InitializeP1
   private :: InitializeIO
 
   integer,  allocatable  :: asyncio_petlist(:)
@@ -34,6 +34,7 @@ contains
     use NUOPC_Driver , only : driver_routine_SS             => SetServices
     use NUOPC_Driver , only : ensemble_label_SetModelServices => label_SetModelServices
     use NUOPC_Driver , only : ensemble_label_SetRunSequence => label_SetRunSequence
+    use NUOPC_Driver , only : ensemble_label_ModifyCplLists => label_ModifyCplLists
     use ESMF         , only : ESMF_GridComp, ESMF_GridCompSet
     use ESMF         , only : ESMF_Config, ESMF_ConfigCreate, ESMF_ConfigLoadFile
     use ESMF         , only : ESMF_SUCCESS, ESMF_LogWrite, ESMF_LOGMSG_INFO
@@ -44,7 +45,7 @@ contains
 
     ! local variables
     type(ESMF_Config) :: config
-    character(len=*), parameter :: subname = "(u_FILE_u:SetServices)"
+    character(len=*), parameter :: subname = u_FILE_u//":SetServices)"
     !---------------------------------------
 
     rc = ESMF_SUCCESS
@@ -59,13 +60,14 @@ contains
          specRoutine=SetModelServices, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    call ESMF_GridCompSetEntryPoint(ensemble_driver, ESMF_METHOD_INITIALIZE, userRoutine=InitializeP1, phase=1, rc=rc)
+!    call ESMF_GridCompSetEntryPoint(ensemble_driver, ESMF_METHOD_INITIALIZE, userRoutine=InitializeP1, phase=1, rc=rc)
 
 !    call ESMF_GridCompSetEntryPoint(ensemble_driver, ESMF_METHOD_INITIALIZE, userRoutine=InitializeIO, phase=0, rc=rc)
 !    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    call NUOPC_CompSpecialize(ensemble_driver, specLabel=ensemble_label_ModifyCplLists, &
 !    call NUOPC_CompSpecialize(ensemble_driver, specLabel=ensemble_label_SetRunSequence, &
-!         specRoutine=InitializeIO, rc=rc)
+         specRoutine=InitializeIO, rc=rc)
 
     ! Create, open and set the config
     config = ESMF_ConfigCreate(rc=rc)
@@ -80,7 +82,7 @@ contains
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
   end subroutine SetServices
-
+#ifdef USETHIS
   !================================================================================
   recursive subroutine InitializeP1(driver, importState, exportState, clock, rc)
     use ESMF
@@ -96,7 +98,7 @@ contains
     integer                   :: verbosity, profiling
 !    type(type_InternalState)  :: is
     logical                   :: isSet
-    character(len=*), parameter :: subname = "(u_FILE_u:InitializeP1)"
+    character(len=*), parameter :: subname = u_FILE_u//":InitializeP1)"
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
 
@@ -213,7 +215,7 @@ contains
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
   end subroutine
-
+#endif
 
   !================================================================================
 
@@ -265,7 +267,7 @@ contains
     character(len=*) , parameter :: start_type_start = "startup"
     character(len=*) , parameter :: start_type_cont  = "continue"
     character(len=*) , parameter :: start_type_brnch = "branch"
-    character(len=*) , parameter :: subname = "(ensemble_driver.F90:SetModelServices)"
+    character(len=*) , parameter :: subname = u_FILE_u//":SetModelServices)"
     !-------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -452,7 +454,8 @@ contains
 
   end subroutine SetModelServices
   
-  recursive subroutine InitializeIO(ensemble_driver, importState, exportState, clock, rc)
+!  recursive subroutine InitializeIO(ensemble_driver, importState, exportState, clock, rc)
+   subroutine InitializeIO(ensemble_driver, rc)
     use ESMF, only: ESMF_GridComp, ESMF_LOGMSG_INFO, ESMF_LogWrite
     use ESMF, only: ESMF_SUCCESS, ESMF_VM, ESMF_GridCompGet, ESMF_VMGet
     use ESMF, only: ESMF_CONFIG, ESMF_GridCompIsPetLocal, ESMF_State, ESMF_Clock
@@ -461,8 +464,8 @@ contains
     use shr_pio_mod   , only: shr_pio_init, shr_pio_component_init
 
     type(ESMF_GridComp) :: ensemble_driver
-    type(ESMF_State)    :: importState, exportState
-    type(ESMF_Clock)    :: clock
+!    type(ESMF_State)    :: importState, exportState
+!    type(ESMF_Clock)    :: clock
     integer, intent(out) :: rc
 
     type(ESMF_VM) :: ensemble_vm
@@ -474,7 +477,7 @@ contains
     integer :: i
     integer :: iam
     character(len=CL) :: cvalue
-    character(len=*), parameter :: subname="InitializeIO"
+    character(len=*), parameter :: subname=u_FILE_u//"InitializeIO"
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)

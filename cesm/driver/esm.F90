@@ -55,7 +55,7 @@ contains
 
     ! local variables
     type(ESMF_Config) :: runSeq
-    character(len=*), parameter :: subname = "(__FILE__:SetServices)"
+    character(len=*), parameter :: subname = __FILE__//":SetServices)"
     !---------------------------------------
 
     rc = ESMF_SUCCESS
@@ -133,7 +133,7 @@ contains
     integer           :: maxthreads
     character(len=CL) :: msgstr
     integer           :: componentcount
-    character(len=*), parameter :: subname = "(__FILE__:SetModelServices)"
+    character(len=*), parameter :: subname = u_FILE_u//":SetModelServices)"
     !-------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -173,7 +173,7 @@ contains
 
     if (componentCount == 0) then
       write (msgstr, *) "No models were specified in component_list "
-      call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
+      call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=u_FILE_u, rcToReturn=rc)
       return  ! bail out
     endif
 
@@ -246,7 +246,7 @@ contains
     integer                 :: localrc
     type(ESMF_Config)       :: runSeq
     type(NUOPC_FreeFormat)  :: runSeqFF
-    character(len=*), parameter :: subname = "(__FILE__:SetRunSequence)"
+    character(len=*), parameter :: subname = u_FILE_u//":SetRunSequence)"
     !---------------------------------------
 
     rc = ESMF_SUCCESS
@@ -274,7 +274,7 @@ contains
     ! call NUOPC_DriverPrint(driver, orderflag=.true.)
     ! if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
     !   line=__LINE__, &
-    !   file=__FILE__)) &
+    !   file=u_FILE_u)) &
     !   return  ! bail out
 
     ! call pretty_print_nuopc_freeformat(runSeqFF, 'run sequence', rc=rc)
@@ -344,7 +344,7 @@ contains
     character(len=CL), allocatable :: cplList(:)
     character(len=CL)              :: tempString
     character(len=CL)              :: msgstr
-    character(len=*), parameter    :: subname = "(__FILE__:ModifyCplLists)"
+    character(len=*), parameter    :: subname = u_FILE_u//":ModifyCplLists)"
     !---------------------------------------
 
     rc = ESMF_SUCCESS
@@ -443,7 +443,7 @@ contains
     integer          , parameter :: ens1=1                ! use first instance of ensemble only
     integer          , parameter :: fix1=1                ! temporary hard-coding to first ensemble, needs to be fixed
     real(R8)         , parameter :: epsilo = shr_const_mwwv/shr_const_mwdair
-    character(len=*) , parameter :: subname = '(InitAttributes)'
+    character(len=*) , parameter :: subname = __FILE__//'(InitAttributes)'
     !----------------------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -576,7 +576,7 @@ contains
     character(len=CS) :: logFilePostFix ! postfix for output log files
     character(len=CL) :: outPathRoot    ! root for output log files
     character(len=CS) :: cime_model
-    character(len=*), parameter :: subname = '(driver_attributes_check) '
+    character(len=*), parameter :: subname = __FILE__//'(driver_attributes_check) '
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -636,7 +636,7 @@ contains
     character(len=CL)              :: cvalue
     character(len=CS)              :: attribute
     integer                        :: componentCount
-    character(len=*), parameter    :: subname = "(__FILE__:AddAttributes)"
+    character(len=*), parameter    :: subname = u_FILE_u//":AddAttributes)"
     !-------------------------------------------
 
     rc = ESMF_Success
@@ -739,7 +739,7 @@ contains
 
     ! local variables
     type(NUOPC_FreeFormat)  :: attrFF
-    character(len=*), parameter :: subname = "(__FILE__:ReadAttributes)"
+    character(len=*), parameter :: subname = u_FILE_u//":ReadAttributes)"
     !-------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -786,7 +786,7 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
-    character(len=*), parameter :: subname = "(__FILE__:InitAdvertize)"
+    character(len=*), parameter :: subname = u_FILE_u//":InitAdvertize)"
     !---------------------------------------
 
     rc = ESMF_SUCCESS
@@ -897,7 +897,7 @@ contains
     character(CL)                  :: cvalue
     logical                        :: found_comp
     integer :: rank, nprocs, ierr
-    character(len=*), parameter    :: subname = "__FILE__:(esm_init_pelayout)"
+    character(len=*), parameter    :: subname = u_FILE_u//":(esm_init_pelayout)"
     !---------------------------------------
 
     rc = ESMF_SUCCESS
@@ -986,12 +986,12 @@ contains
        read(cvalue,*) rootpe
        if (rootpe < 0 .or. rootpe > PetCount) then
           write (msgstr, *) "Invalid Rootpe value specified for component: ",namestr, ' rootpe: ',rootpe
-          call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
+          call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=u_FILE_u, rcToReturn=rc)
           return
        endif
        if(rootpe+ntasks > PetCount) then
           write (msgstr, *) "Invalid pelayout value specified for component: ",namestr, ' rootpe+ntasks: ',rootpe+ntasks
-          call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
+          call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=u_FILE_u, rcToReturn=rc)
           return
        endif
 
@@ -1001,7 +1001,7 @@ contains
        if (stride < 1 .or. rootpe+(ntasks-1)*stride > PetCount) then
           write (msgstr, *) "Invalid pestride value specified for component: ",namestr,&
                ' rootpe: ',rootpe, ' pestride: ', stride, ' ntasks: ',ntasks, ' PetCount: ', PetCount
-          call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
+          call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=u_FILE_u, rcToReturn=rc)
           return
        endif
 
@@ -1152,7 +1152,7 @@ contains
 #endif
        if (.not. found_comp) then
           write(msgstr,*) 'No component ',trim(compLabels(i)),' found'
-          call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
+          call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=u_FILE_u, rcToReturn=rc)
           return
        endif
        comp_iamin(i) = .false.
@@ -1177,7 +1177,7 @@ contains
              call MPI_Comm_rank(comms(i+1), rank, ierr)
              if(nprocs /= ntasks) then
                 write(msgstr,*) 'Component ',trim(compLabels(i)),' has mpi task mismatch, do threads align with nodes?'
-                call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
+                call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=u_FILE_u, rcToReturn=rc)
                 return
              endif
           endif
@@ -1255,7 +1255,7 @@ contains
     integer                :: iscol_data(1)
     integer                :: petcount
     character(len=CL)      :: cvalue
-    character(len=*), parameter :: subname= "__FILE__:(esm_get_single_column_attributes)"
+    character(len=*), parameter :: subname= u_FILE_u//":(esm_get_single_column_attributes)"
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS

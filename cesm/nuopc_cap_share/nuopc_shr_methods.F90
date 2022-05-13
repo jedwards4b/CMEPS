@@ -164,8 +164,8 @@ contains
        endif
 
        open(newunit=logunit,file=trim(diro)//"/"//trim(logfile))
-       ! Write the PIO settings to the beggining of each component log
-       call shr_pio_log_comp_settings(gcomp, logunit)
+       ! Write the PIO settings to the begining of each component log
+!       call shr_pio_log_comp_settings(gcomp, logunit)
 
     else
        logUnit = 6

@@ -260,11 +260,13 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
 
-    call NUOPC_CompAttributeGet(driver, name="asyncio_ntasks", value=asyncio_ntasks, rc=rc)
+    call NUOPC_CompAttributeGet(driver, name="asyncio_ntasks", value=cval, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    call NUOPC_CompAttributeGet(driver, name="asyncio_stride", value=asyncio_stride, rc=rc)
+    read(cval, *) asyncio_ntasks
+    
+    call NUOPC_CompAttributeGet(driver, name="asyncio_stride", value=cval, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+    read(cval, *) asyncio_stride
         
     do i=1,ncomps
        io_compid(i) = i+1
