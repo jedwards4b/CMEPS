@@ -135,6 +135,18 @@ program esmApp
        file=__FILE__)) &
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
+  ! This calls back into ensemble_driver to initialize IO
+  call ESMF_GridCompInitialize(ensemble_driver_comp, phase=0, userRC=urc, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       call ESMF_Finalize(endflag=ESMF_END_ABORT)
+  if (ESMF_LogFoundError(rcToCheck=urc, msg=ESMF_LOGERR_PASSTHRU, &
+       line=__LINE__, &
+       file=__FILE__)) &
+       call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  
   !-----------------------------------------------------------------------------
   ! Call Run  for the ensemble driver
   !-----------------------------------------------------------------------------

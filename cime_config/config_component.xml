@@ -2031,6 +2031,22 @@
     <desc>pio buffer size limit for pnetcdf output</desc>
   </entry>
 
+  <entry id="PIO_ASYNCIO_NTASKS">
+    <type>integer</type>
+    <default_value>0</default_value>
+    <group>run_pio</group>
+    <file>env_run.xml</file>
+    <desc>Number of tasks for async IO (ignored unless at least one ASYNC_INTERFACE is True)</desc>
+  </entry>
+
+  <entry id="PIO_ASYNCIO_STRIDE">
+    <type>integer</type>
+    <default_value>${MAX_MPITASKS_PER_NODE}</default_value>
+    <group>run_pio</group>
+    <file>env_run.xml</file>
+    <desc>Stride between tasks for async IO (ignored unless at least one ASYNC_INTERFACE is True)</desc>
+  </entry>
+
   <entry id="PIO_ASYNC_INTERFACE">
     <type>logical</type>
     <valid_values>TRUE,FALSE</valid_values>

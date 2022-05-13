@@ -55,7 +55,7 @@ contains
 
     ! local variables
     type(ESMF_Config) :: runSeq
-    character(len=*), parameter :: subname = "(esm.F90:SetServices)"
+    character(len=*), parameter :: subname = "(__FILE__:SetServices)"
     !---------------------------------------
 
     rc = ESMF_SUCCESS
@@ -133,7 +133,7 @@ contains
     integer           :: maxthreads
     character(len=CL) :: msgstr
     integer           :: componentcount
-    character(len=*), parameter :: subname = "(esm.F90:SetModelServices)"
+    character(len=*), parameter :: subname = "(__FILE__:SetModelServices)"
     !-------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -246,7 +246,7 @@ contains
     integer                 :: localrc
     type(ESMF_Config)       :: runSeq
     type(NUOPC_FreeFormat)  :: runSeqFF
-    character(len=*), parameter :: subname = "(esm.F90:SetRunSequence)"
+    character(len=*), parameter :: subname = "(__FILE__:SetRunSequence)"
     !---------------------------------------
 
     rc = ESMF_SUCCESS
@@ -344,7 +344,7 @@ contains
     character(len=CL), allocatable :: cplList(:)
     character(len=CL)              :: tempString
     character(len=CL)              :: msgstr
-    character(len=*), parameter    :: subname = "(esm.F90:ModifyCplLists)"
+    character(len=*), parameter    :: subname = "(__FILE__:ModifyCplLists)"
     !---------------------------------------
 
     rc = ESMF_SUCCESS
@@ -553,6 +553,7 @@ contains
        mixed_spec  = ShrWVSatTableSpec(ceiling(250._R8/wv_sat_table_spacing), 125._R8, wv_sat_table_spacing)
        call shr_wv_sat_make_tables(liquid_spec, ice_spec, mixed_spec)
     end if
+    call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
   end subroutine InitAttributes
 
@@ -635,7 +636,7 @@ contains
     character(len=CL)              :: cvalue
     character(len=CS)              :: attribute
     integer                        :: componentCount
-    character(len=*), parameter    :: subname = "(esm.F90:AddAttributes)"
+    character(len=*), parameter    :: subname = "(__FILE__:AddAttributes)"
     !-------------------------------------------
 
     rc = ESMF_Success
@@ -716,6 +717,7 @@ contains
     !------
     call esm_set_single_column_attributes(compname, gcomp, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
   end subroutine AddAttributes
 
@@ -737,7 +739,7 @@ contains
 
     ! local variables
     type(NUOPC_FreeFormat)  :: attrFF
-    character(len=*), parameter :: subname = "(esm.F90:ReadAttributes)"
+    character(len=*), parameter :: subname = "(__FILE__:ReadAttributes)"
     !-------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -784,7 +786,7 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
-    character(len=*), parameter :: subname = "(esm.F90:InitAdvertize)"
+    character(len=*), parameter :: subname = "(__FILE__:InitAdvertize)"
     !---------------------------------------
 
     rc = ESMF_SUCCESS
@@ -802,8 +804,7 @@ contains
     use ESMF         , only : ESMF_RC_NOT_VALID, ESMF_LogSetError, ESMF_Info, ESMF_InfoSet
     use ESMF         , only : ESMF_GridCompIsPetLocal, ESMF_MethodAdd, ESMF_UtilStringLowerCase
     use ESMF         , only : ESMF_InfoCreate, ESMF_InfoDestroy
-!    use ESMF         , only : ESMF_Kind_i4, ESMF_VMAllReduce, ESMF_REDUCE_MAX
-    use MPI          , only : MPI_AllReduce, MPI_INTEGER, MPI_MAX, MPI_IN_PLACE
+    use MPI          , only : MPI_INTEGER, MPI_MAX, MPI_IN_PLACE
 
 
     use NUOPC        , only : NUOPC_CompAttributeGet
@@ -812,7 +813,6 @@ contains
     use mpi          , only : MPI_COMM_NULL, mpi_comm_size
 #endif
     use mct_mod      , only : mct_world_init
-    use shr_pio_mod  , only : shr_pio_init, shr_pio_component_init
 
 #ifdef MED_PRESENT
     use med_internalstate_mod , only : med_id
@@ -897,7 +897,7 @@ contains
     character(CL)                  :: cvalue
     logical                        :: found_comp
     integer :: rank, nprocs, ierr
-    character(len=*), parameter    :: subname = "(esm_pelayout.F90:esm_init_pelayout)"
+    character(len=*), parameter    :: subname = "__FILE__:(esm_init_pelayout)"
     !---------------------------------------
 
     rc = ESMF_SUCCESS
@@ -937,11 +937,6 @@ contains
        inst_suffix = ""
     endif
 
-    ! Initialize PIO
-    ! This reads in the pio parameters that are independent of component
-    call shr_pio_init(driver, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
     allocate(comms(componentCount+1), comps(componentCount+1))
     comps(1) = 1
     comms = MPI_COMM_NULL
@@ -971,7 +966,7 @@ contains
        read(cvalue,*) ntasks
 
        if (ntasks < 0 .or. ntasks > PetCount) then
-          write (msgstr, *) "Invalid NTASKS value specified for component: ",namestr, ' ntasks: ',ntasks
+          write (msgstr, *) "Invalid NTASKS value specified for component: ",namestr, ' ntasks: ',ntasks, PetCount
           call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
           return
        endif
@@ -1059,7 +1054,6 @@ contains
 #endif
 #ifdef ATM_PRESENT
        if (trim(compLabels(i)) .eq. 'ATM') then
-          print *,__FILE__,__LINE__,petlist
 #ifdef ESMF_AWARE_THREADING
           call NUOPC_DriverAddComp(driver, trim(compLabels(i)), ATMSetServices, ATMSetVM, &
                petList=petlist, comp=child, info=info, rc=rc)
@@ -1193,19 +1187,12 @@ contains
        if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     enddo
-    ! Read in component dependent PIO parameters and initialize
-    ! IO systems
-!    call ESMF_VMAllReduce(driver_vm, comppetlists, comppetlists, size(comppetlists), ESMF_REDUCE_MAX, rc=rc)
-!    if (chkerr(rc,__LINE__,u_FILE_u)) return
-!    call MPI_AllReduce(MPI_IN_PLACE, comppetlists, size(comppetlists), MPI_INTEGER, MPI_MAX, Global_COMM, rc)
 
     ! Initialize MCT (this is needed for some component models - which ones?)
     call mct_world_init(componentCount+1, GLOBAL_COMM, comms, comps)
 
-    call shr_pio_component_init(driver, size(comps), rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
     deallocate(petlist, comms, comps, comp_iamin, comp_comm_iam)
+    call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
   end subroutine esm_init_pelayout
 
@@ -1268,7 +1255,7 @@ contains
     integer                :: iscol_data(1)
     integer                :: petcount
     character(len=CL)      :: cvalue
-    character(len=*), parameter :: subname= ' (esm_get_single_column_attributes) '
+    character(len=*), parameter :: subname= "__FILE__:(esm_get_single_column_attributes)"
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS

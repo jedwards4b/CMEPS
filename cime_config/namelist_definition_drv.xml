@@ -3336,6 +3336,30 @@
     </values>
   </entry>
 
+  <entry id="asyncio_ntasks" modify_via_xml="PIO_ASYNCIO_NTASKS">
+    <type>integer</type>
+    <category>cime_pes</category>
+    <group>PELAYOUT_attributes</group>
+    <desc>
+      The number of async IO tasks if any PIO_ASYNC_INTERFACE variable is TRUE
+    </desc>
+    <values>
+      <value>$PIO_ASYNCIO_NTASKS</value>
+    </values>
+  </entry>
+  <entry id="asyncio_stride" modify_via_xml="PIO_ASYNCIO_STRIDE">
+    <type>integer</type>
+    <category>cime_pes</category>
+    <group>PELAYOUT_attributes</group>
+    <desc>
+      The stride (mpi distance between) of async IO tasks
+    </desc>
+    <values>
+      <value>$PIO_ASYNCIO_STRIDE</value>
+    </values>
+  </entry>
+
+
   <!-- ===========================            -->
   <!-- namelist debug_inparm                  -->
   <!--  input in file drv_in (used in esmApp.F90) -->

@@ -81,14 +81,19 @@ def _create_drv_namelists(case, infile, confdir, nmlgen, files):
         config['single_column'] = 'false'
 
     # needed for determining the run sequence as well as glc_renormalize_smb
-    config['COMP_ATM'] = case.get_value("COMP_ATM")
-    config['COMP_ICE'] = case.get_value("COMP_ICE")
-    config['COMP_GLC'] = case.get_value("COMP_GLC")
-    config['COMP_LND'] = case.get_value("COMP_LND")
-    config['COMP_OCN'] = case.get_value("COMP_OCN")
-    config['COMP_ROF'] = case.get_value("COMP_ROF")
-    config['COMP_WAV'] = case.get_value("COMP_WAV")
-
+    asyncio_ntasks = case.get_value("PIO_ASYNCIO_NTASKS")
+    comp_classes = case.get_values("COMP_CLASSES")
+    asyncio = False
+    for comp in comp_classes:
+        config[f'COMP_{comp}'] = case.get_value(f"COMP_{comp}")
+        if case.get_value(f"PIO_ASYNC_INTERFACE_{comp}"):
+            asyncio = True
+    if asyncio:
+        expect(asyncio_ntasks > 0, "ASYNC_INTERFACE is TRUE but no IO tasks are assigned in PIO_ASYNCIO_NTASKS")
+    elif asyncio_ntasks > 0:
+        logger.warning("ASYNC_INTERFACE is FALSE, resetting PIO_ASYNCIO_NTASKS to 0")
+        case.set_value("PIO_ASYNCIO_NTASKS", 0)
+        
     if ((case.get_value("COMP_ROF") == 'mosart' and case.get_value("MOSART_MODE") == 'NULL') or
         (case.get_value("COMP_ROF") == 'rtm' and case.get_value("RTM_MODE") == 'NULL') or
         (case.get_value("ROF_GRID") == 'null')):
@@ -101,6 +106,8 @@ def _create_drv_namelists(case, infile, confdir, nmlgen, files):
     elif case.get_value('RUN_TYPE') == 'branch':
         config['run_type'] = 'branch'
 
+
+        
     #----------------------------------------------------
     # Initialize namelist defaults
     #----------------------------------------------------
