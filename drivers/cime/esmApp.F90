@@ -10,7 +10,7 @@ program esmApp
   use ESMF,            only : ESMF_GridCompDestroy, ESMF_LOGMSG_INFO, ESMF_GridComp, ESMF_GridCompRun
   use ESMF,            only : ESMF_GridCompFinalize, ESMF_GridCompCreate, ESMF_GridCompInitialize
   use ESMF,            only : ESMF_LOGKIND_MULTI_ON_ERROR, ESMF_LogKind_Flag
-  use ESMF,            only : ESMF_VMGet, ESMF_VM, ESMF_InitializePreMPI
+  use ESMF,            only : ESMF_VMGet, ESMF_VM, ESMF_InitializePreMPI, ESMF_VMLogMemInfo
 
   use mpi
   use NUOPC,           only : NUOPC_FieldDictionarySetup
@@ -80,6 +80,8 @@ program esmApp
   call ESMF_Initialize(mpiCommunicator=COMP_COMM, logkindflag=logkindflag, logappendflag=.false., &
        defaultCalkind=ESMF_CALKIND_GREGORIAN, ioUnitLBound=5001, ioUnitUBound=5101, vm=vm, rc=rc)
 
+  call ESMF_VMLogMemInfo('After ESMF_Initialize in esmApp')
+
   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
        line=__LINE__, &
        file=__FILE__)) &
@@ -109,6 +111,8 @@ program esmApp
        file=__FILE__)) &
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
+  call ESMF_VMLogMemInfo('After reading in the field dictionary')
+
   !-----------------------------------------------------------------------------
   ! Create the earth system ensemble driver Component
   !-----------------------------------------------------------------------------
@@ -118,6 +122,8 @@ program esmApp
        line=__LINE__, &
        file=__FILE__)) &
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  call ESMF_VMLogMemInfo('After creating the ensemble driver')
 
   !-----------------------------------------------------------------------------
   ! SetServices for the ensemble driver Component
@@ -133,6 +139,8 @@ program esmApp
        file=__FILE__)) &
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
+  call ESMF_VMLogMemInfo('After setservices for the ensemble driver')
+
   !-----------------------------------------------------------------------------
   ! Call Initialize for the earth system ensemble Component
   !-----------------------------------------------------------------------------
@@ -146,6 +154,8 @@ program esmApp
        line=__LINE__, &
        file=__FILE__)) &
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  call ESMF_VMLogMemInfo('After ESMF_GridCompInitialize in esmApp')
 
   !-----------------------------------------------------------------------------
   ! Call Run  for the ensemble driver

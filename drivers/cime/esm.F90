@@ -12,6 +12,7 @@ module ESM
   use shr_file_mod , only : shr_file_setLogunit
   use esm_utils_mod, only : logunit, mastertask, dbug_flag, chkerr
   use perf_mod     , only : t_initf
+  use ESMF         , only : ESMF_VMLogMemInfo
 
   implicit none
   private
@@ -62,6 +63,8 @@ contains
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
 
+    call ESMF_VMLogMemInfo('esm: beginning of SetServices ')
+
     ! NUOPC_Driver registers the generic methods
     call NUOPC_CompDerive(driver, driver_routine_SS, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
@@ -80,6 +83,7 @@ contains
          phaseLabelList=(/"IPDv03p2"/), userRoutine=ModifyCplLists, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    call ESMF_VMLogMemInfo('esm: after NUOPC_CompSetInternalEntryPoint for IPDv03p2')
     !
     ! This prevents the driver trying to "auto" connect to the ensemble_driver
     ! by default the FieldTransferPolicy is "transferall" and we need "transfernone"
@@ -98,6 +102,7 @@ contains
     call ESMF_GridCompSet(driver, configFile="nuopc.runconfig", rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    call ESMF_VMLogMemInfo('esm: end of SetServices ')
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
   end subroutine SetServices
@@ -139,6 +144,8 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
+
+    call ESMF_VMLogMemInfo('esm: beginning of SetModelServices')
 
     !-------------------------------------------
     ! Set the io logunit to the value defined in ensemble_driver
@@ -223,6 +230,8 @@ contains
 
     call t_initf('drv_in', LogPrint=.true., mpicom=global_comm, mastertask=mastertask, MaxThreads=maxthreads)
 
+    call ESMF_VMLogMemInfo('esm: beginning of SetModelServices')
+
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
   end subroutine SetModelServices
@@ -239,6 +248,7 @@ contains
     use NUOPC        , only : NUOPC_FreeFormatCreate
     use NUOPC_Driver , only : NUOPC_DriverIngestRunSequence, NUOPC_DriverSetRunSequence
     use NUOPC_Driver , only : NUOPC_DriverPrint
+    use ESMF, only : ESMF_AttributeSet
 
     ! input/output variables
     type(ESMF_GridComp)  :: driver
@@ -254,6 +264,8 @@ contains
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
 
+    call ESMF_VMLogMemInfo('esm: at beginning of SetRunSequence')
+
     !--------
     ! Run Sequence and Connectors
     !--------
@@ -267,6 +279,11 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     runSeqFF = NUOPC_FreeFormatCreate(runSeq, label="runSeq::", rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    write(6,*)'Setting verbosity to max'
+    call ESMF_AttributeSet(driver, name="Verbosity", value='32531', &
+         convention="NUOPC", purpose="Instance", rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     call NUOPC_DriverIngestRunSequence(driver, runSeqFF, autoAddConnectors=.true., rc=rc)
@@ -284,6 +301,8 @@ contains
 
     call NUOPC_FreeFormatDestroy(runSeqFF, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_VMLogMemInfo('esm: at end of SetRunSequence')
 
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
@@ -351,6 +370,7 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
+    call ESMF_VMLogMemInfo('esm: at beginning of ModifyCplLists')
 
     call ESMF_LogWrite("Driver is in ModifyCplLists()", ESMF_LOGMSG_INFO, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
@@ -381,6 +401,7 @@ contains
 
            tempString = trim(cplList(j))//":remapmethod=redist"
            cplList(j) = trim(tempString)
+           call ESMF_VMLogMemInfo('In ConnectorList loop at '//trim(tempString))
         enddo
 
         ! store the modified cplList in CplList attribute of connector i
@@ -389,9 +410,12 @@ contains
 
         deallocate(cplList)
       endif
+
     enddo
 
     deallocate(connectorList)
+
+    call ESMF_VMLogMemInfo('esm: at end of ModifyCplLists')
 
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 

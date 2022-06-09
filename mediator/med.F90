@@ -79,7 +79,7 @@ module MED
   character(len=*), parameter :: grid_arbopt = "grid_reg"   ! grid_reg or grid_arb
   character(len=*), parameter :: u_FILE_u  = &
        __FILE__
-  logical :: profile_memory = .false.
+  logical :: profile_memory = .true.
 
   character(len=8) :: atm_present, lnd_present
   character(len=8) :: ice_present, rof_present
@@ -142,7 +142,7 @@ contains
     !-----------------------------------------------------------
 
     rc = ESMF_SUCCESS
-    if (profile_memory) call ESMF_VMLogMemInfo("Entering "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Entering Mediator "//trim(subname))
 
     !------------------
     ! the NUOPC model component mediator_routine_SS will register the generic methods
@@ -534,7 +534,7 @@ contains
          specRoutine=med_finalize, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    if (profile_memory) call ESMF_VMLogMemInfo("Leaving "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Leaving Mediator "//trim(subname))
 
   end subroutine SetServices
 
@@ -569,7 +569,7 @@ contains
     !-----------------------------------------------------------
 
     rc = ESMF_SUCCESS
-    if (profile_memory) call ESMF_VMLogMemInfo("Entering "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Entering Mediator "//trim(subname))
     call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMGet(vm, localPet=localPet, rc=rc)
@@ -641,7 +641,7 @@ contains
     call NUOPC_CompFilterPhaseMap(gcomp, ESMF_METHOD_INITIALIZE, acceptStringList=(/"IPDv03p"/), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    if (profile_memory) call ESMF_VMLogMemInfo("Leaving "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Leaving Mediator "//trim(subname))
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
   end subroutine InitializeP0
@@ -682,7 +682,7 @@ contains
 
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
     rc = ESMF_SUCCESS
-    if (profile_memory) call ESMF_VMLogMemInfo("Entering "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Entering Mediator "//trim(subname))
 
     !------------------
     ! Allocate memory for the internal state and set it in the Component.
@@ -989,7 +989,7 @@ contains
        end if
     end do ! end of ncomps loop
 
-    if (profile_memory) call ESMF_VMLogMemInfo("Leaving "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Leaving Mediator "//trim(subname))
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
   end subroutine InitializeIPDv03p1
@@ -1021,7 +1021,7 @@ contains
 
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
     rc = ESMF_SUCCESS
-    if (profile_memory) call ESMF_VMLogMemInfo("Entering "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Entering Mediator "//trim(subname))
 
     ! Get the internal state from Component.
     nullify(is_local%wrap)
@@ -1053,7 +1053,7 @@ contains
       endif
     enddo
 
-    if (profile_memory) call ESMF_VMLogMemInfo("Leaving "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Leaving Mediator "//trim(subname))
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
   end subroutine InitializeIPDv03p3
@@ -1082,7 +1082,7 @@ contains
 
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
     rc = ESMF_SUCCESS
-    if (profile_memory) call ESMF_VMLogMemInfo("Entering "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Entering Mediator "//trim(subname))
 
     ! Get the internal state from the mediator gridded component.
     nullify(is_local%wrap)
@@ -1105,7 +1105,7 @@ contains
        endif
        call ESMF_LogWrite(trim(subname)//": finished for component "//trim(compname(n1)), ESMF_LOGMSG_INFO)
     enddo
-    if (profile_memory) call ESMF_VMLogMemInfo("Leaving "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Leaving Mediator "//trim(subname))
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
   contains  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1157,7 +1157,7 @@ contains
       call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
       rc = ESMF_Success
       if (profile_memory) then
-         call ESMF_VMLogMemInfo("Entering "//trim(subname))
+         call ESMF_VMLogMemInfo("Entering Mediator "//trim(subname))
       end if
       call ESMF_StateGet(State, itemCount=fieldCount, rc=rc)
       if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -1371,7 +1371,7 @@ contains
 
       deallocate(fieldNameList)
 
-      if (profile_memory) call ESMF_VMLogMemInfo("Leaving "//trim(subname))
+      if (profile_memory) call ESMF_VMLogMemInfo("Leaving Mediator "//trim(subname))
       call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
     end subroutine realizeConnectedGrid
@@ -1411,7 +1411,7 @@ contains
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
 
     rc = ESMF_SUCCESS
-    if (profile_memory) call ESMF_VMLogMemInfo("Entering "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Entering Mediator "//trim(subname))
 
     ! Get the internal state from Component.
     nullify(is_local%wrap)
@@ -1444,7 +1444,7 @@ contains
       endif
     enddo
 
-    if (profile_memory) call ESMF_VMLogMemInfo("Leaving "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Leaving Mediator "//trim(subname))
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
   contains  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1482,7 +1482,7 @@ contains
 
       call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
       rc = ESMF_Success
-      if (profile_memory) call ESMF_VMLogMemInfo("Entering "//trim(subname))
+      if (profile_memory) call ESMF_VMLogMemInfo("Entering Mediator "//trim(subname))
 
       call State_GetNumFields(State, fieldCount, rc=rc)
       if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -1582,7 +1582,7 @@ contains
 
       endif ! end of fieldcount< 0
 
-      if (profile_memory) call ESMF_VMLogMemInfo("Leaving "//trim(subname))
+      if (profile_memory) call ESMF_VMLogMemInfo("Leaving Mediator "//trim(subname))
       call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
     end subroutine completeFieldInitialization
@@ -1679,7 +1679,7 @@ contains
 
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
     rc = ESMF_SUCCESS
-    if (profile_memory) call ESMF_VMLogMemInfo("Entering "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Entering Mediator "//trim(subname))
 
     call NUOPC_CompAttributeSet(gcomp, name="InitializeDataComplete", value="false", rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -2408,7 +2408,7 @@ contains
             ESMF_LOGMSG_INFO)
 
     end if
-    if (profile_memory) call ESMF_VMLogMemInfo("Leaving "//trim(subname))
+    if (profile_memory) call ESMF_VMLogMemInfo("Leaving Mediator "//trim(subname))
     if (dbug_flag > 5) then
       call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
     endif

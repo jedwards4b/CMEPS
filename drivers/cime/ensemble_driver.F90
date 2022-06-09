@@ -11,6 +11,7 @@ module Ensemble_driver
   use shr_log_mod   , only : shrlogunit=> shr_log_unit
   use shr_file_mod  , only : shr_file_setLogUnit
   use esm_utils_mod , only : mastertask, logunit, chkerr
+  use ESMF          , only : ESMF_VMLogMemInfo
 
   implicit none
   private
@@ -44,6 +45,7 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
+    call ESMF_VMLogMemInfo('ensemble_driver: beginning of SetServices')
 
     ! NUOPC_Driver registers the generic methods
     call NUOPC_CompDerive(ensemble_driver, driver_routine_SS, rc=rc)
@@ -53,6 +55,7 @@ contains
     call NUOPC_CompSpecialize(ensemble_driver, specLabel=ensemble_label_SetModelServices, &
          specRoutine=SetModelServices, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_LogWrite("after nuopc_compderive")
 
     ! Create, open and set the config
     config = ESMF_ConfigCreate(rc=rc)
@@ -64,6 +67,7 @@ contains
     call ESMF_GridCompSet(ensemble_driver, config=config, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    call ESMF_VMLogMemInfo('ensemble_driver: end of SetServices')
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
   end subroutine SetServices
@@ -120,6 +124,8 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
+
+    call ESMF_VMLogMemInfo('ensemble_driver: beginning of SetModelServices')
 
     call ESMF_GridCompGet(ensemble_driver, config=config, vm=vm, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
@@ -215,8 +221,11 @@ contains
 
        ! Add driver instance to ensemble driver
        write(drvrinst,'(a,i4.4)') "ESM",inst
+
+       call ESMF_VMLogMemInfo('ensemble_driver: In SetModelServices in before ESMSetServices')
        call NUOPC_DriverAddComp(ensemble_driver, drvrinst, ESMSetServices, petList=petList, comp=gridcomptmp, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_VMLogMemInfo('ensemble_driver: In SetModelServices in after ESMSetServices')
 
        if (localpet >= petlist(1) .and. localpet <= petlist(ntasks_per_member)) then
 
@@ -269,6 +278,8 @@ contains
     enddo
 
     deallocate(petList)
+
+    call ESMF_VMLogMemInfo('ensemble_driver: end of SetModelServices')
 
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
