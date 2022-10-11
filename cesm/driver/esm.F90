@@ -948,11 +948,6 @@ contains
        inst_suffix = ""
     endif
 
-    ! Initialize PIO
-    ! This reads in the pio parameters that are independent of component
-    call driver_pio_init(driver, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
     allocate(comms(componentCount+1), comps(componentCount+1))
     comps(1) = 1
     comms = MPI_COMM_NULL
@@ -1208,14 +1203,8 @@ contains
        if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     enddo
-    ! Read in component dependent PIO parameters and initialize
-    ! IO systems
-    call driver_pio_component_init(driver, size(comps), rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    ! Initialize MCT (this is needed for data models and cice prescribed capability)
     call mct_world_init(componentCount+1, DRIVER_COMM, comms, comps)
-
 
     deallocate(petlist, comms, comps, comp_iamin, comp_comm_iam, PetMapinGlobal)
 

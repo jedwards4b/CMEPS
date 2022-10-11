@@ -417,11 +417,11 @@ contains
 
   subroutine ensemble_finalize(ensemble_driver, rc)
     use ESMF, only : ESMF_GridComp, ESMF_SUCCESS
-    use shr_pio_mod, only: shr_pio_finalize
+    use driver_pio_mod, only: driver_pio_finalize
     type(ESMF_GridComp) :: Ensemble_driver
     integer, intent(out) :: rc
     rc = ESMF_SUCCESS
-    call shr_pio_finalize()
+    call driver_pio_finalize()
 
   end subroutine ensemble_finalize
 end module Ensemble_driver

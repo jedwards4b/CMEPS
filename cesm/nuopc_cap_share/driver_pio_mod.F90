@@ -251,7 +251,8 @@ contains
          MPI_MAX, Global_comm, rc)
     call MPI_AllReduce(MPI_IN_PLACE, driverpecount, 1, MPI_INTEGER, &
          MPI_MAX, Global_comm, rc)
-    
+
+    print *,__FILE__,__LINE__, total_comps
     allocate(pio_comp_settings(total_comps))
     allocate(procs_per_comp(total_comps))
     allocate(io_compid(total_comps))
@@ -359,7 +360,7 @@ contains
                   pio_rearr_opts)
           endif
           ! Write the PIO settings to the beggining of each component log
-          if(comp_rank == 0) call shr_pio_log_comp_settings(gcomp(i), rc)
+          if(comp_rank == 0) call driver_pio_log_comp_settings(gcomp(i), rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 
        endif
@@ -457,7 +458,7 @@ contains
     deallocate(gcomp)
   end subroutine driver_pio_component_init
 
-  subroutine driver_pio_log_comp_settings(gcomp, logunit, rc)
+  subroutine driver_pio_log_comp_settings(gcomp, rc)
     use ESMF, only : ESMF_GridComp, ESMF_GridCompGet, ESMF_SUCCESS
     use NUOPC, only: NUOPC_CompAttributeGet
 

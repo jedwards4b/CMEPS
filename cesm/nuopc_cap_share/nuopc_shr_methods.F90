@@ -168,23 +168,24 @@ contains
        endif
 
        open(newunit=logunit,file=trim(diro)//"/"//trim(logfile))
-
-       ! Write the PIO settings to the beggining of each component log
-       call driver_pio_log_comp_settings(gcomp, logunit, rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) return
     else
        logUnit = 6
     endif
-
-    
-    call ESMF_GridCompGet(gcomp, name=name, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_LogWrite(trim(subname)//": setting logunit for component: "//trim(name), ESMF_LOGMSG_INFO)
 
     call NUOPC_CompAttributeAdd(gcomp, attrList=(/'logunit'/), rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call NUOPC_CompAttributeSet(gcomp, name='logunit',value=logunit, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    if (mastertask) then
+       ! Write the PIO settings to the beggining of each component log
+       call driver_pio_log_comp_settings(gcomp, rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+    endif
+    
+    call ESMF_GridCompGet(gcomp, name=name, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
   end subroutine set_component_logging

@@ -46,16 +46,20 @@ module med_io_mod
      module procedure med_io_read_FB
      module procedure med_io_read_int
      module procedure med_io_read_int1d
+     module procedure med_io_read_int3d
      module procedure med_io_read_r8
      module procedure med_io_read_r81d
+     module procedure med_io_read_r83d
      module procedure med_io_read_char
   end interface med_io_read
   interface med_io_write
      module procedure med_io_write_FB
      module procedure med_io_write_int
      module procedure med_io_write_int1d
+     module procedure med_io_write_int3d
      module procedure med_io_write_r8
      module procedure med_io_write_r81d
+     module procedure med_io_write_r83d
      module procedure med_io_write_char
   end interface med_io_write
   interface med_io_date2ymd
@@ -1244,6 +1248,80 @@ contains
     endif
 
   end subroutine med_io_write_int1d
+  !===============================================================================
+  subroutine med_io_write_int3d(filename, dimnames, idata, dname, whead, wdata, file_ind, rc)
+
+    !---------------
+    ! Write 3d integer array to netcdf file
+    !---------------
+
+    use pio     , only : var_desc_t, pio_def_dim, pio_def_var
+    use pio     , only : pio_put_att, pio_inq_varid, pio_put_var
+    use pio     , only : pio_int, pio_def_var, pio_bcast_error, PIO_INT
+    use pio     , only : pio_inq_dimid, pio_noerr, pio_seterrorhandling
+
+    ! input/output arguments
+    character(len=*),intent(in) :: filename ! file
+    integer         ,intent(in) :: idata(:,:,:) ! data to be written
+    character(len=*),intent(in) :: dname    ! name of data
+    logical,optional,intent(in) :: whead    ! write header
+    logical,optional,intent(in) :: wdata    ! write data
+    integer,optional,intent(in) :: file_ind
+    character(len=*),intent(in) :: dimnames(3)
+    integer         , intent(out) :: rc
+
+    ! local variables
+    integer          :: rcode
+    integer          :: dimid(3)
+    integer          :: dimlen
+    type(var_desc_t) :: varid
+    character(CL)    :: cunit       ! var units
+    character(CL)    :: lname       ! long name
+    character(CL)    :: sname       ! standard name
+    integer          :: lnx
+    logical          :: lwhead, lwdata
+    integer          :: lfile_ind
+    integer          :: prev_eh
+    integer          :: i
+    character(*),parameter :: subName = '(med_io_write_int1d) '
+    !-------------------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    lwhead = .true.
+    lwdata = .true.
+    if (present(whead)) lwhead = whead
+    if (present(wdata)) lwdata = wdata
+
+    if (.not.lwhead .and. .not.lwdata) then
+       ! should we write a warning?
+       return
+    endif
+
+    lfile_ind = 0
+    if (present(file_ind)) lfile_ind=file_ind
+
+    if (lwhead) then
+       call pio_seterrorhandling(io_file(lfile_ind), PIO_BCAST_ERROR, prev_eh)
+       do i=1,3
+          dimlen = size(idata, i)
+          rcode = pio_inq_dimid(io_file(lfile_ind), dimnames(i), dimid(i))
+          if(rcode /= PIO_NOERR) then
+             rcode = pio_def_dim(io_file(lfile_ind),dimnames(i),dimlen,dimid(i))
+          endif
+       enddo
+       call pio_seterrorhandling(io_file(lfile_ind), prev_eh)
+       rcode = pio_def_var(io_file(lfile_ind),trim(dname),PIO_INT,dimid,varid)
+       rcode = pio_put_att(io_file(lfile_ind),varid,"standard_name",trim(dname))
+       if (lwdata) call med_io_enddef(filename, file_ind=lfile_ind)
+    endif
+
+    if (lwdata) then
+       rcode = pio_inq_varid(io_file(lfile_ind),trim(dname),varid)
+       rcode = pio_put_var(io_file(lfile_ind),varid,idata)
+    endif
+
+  end subroutine med_io_write_int3d
 
   !===============================================================================
   subroutine med_io_write_r8(filename, rdata, dname, whead, wdata, file_ind, rc)
@@ -1340,6 +1418,77 @@ contains
     endif
 
   end subroutine med_io_write_r81d
+
+  !===============================================================================
+  subroutine med_io_write_r83d(filename, dimnames, rdata, dname, whead, wdata, file_ind, rc)
+
+    !---------------
+    ! Write 3d double array to netcdf file
+    !---------------
+
+    use pio , only : var_desc_t, pio_def_dim, pio_def_var, PIO_BCAST_ERROR
+    use pio , only : pio_inq_varid, pio_put_var, pio_double, pio_put_att
+    use pio , only : pio_inq_dimid, pio_def_dim, PIO_NOERR, pio_seterrorhandling
+
+    ! !INPUT/OUTPUT PARAMETERS:
+    character(len=*),intent(in) :: filename ! file
+    character(len=*),intent(in) :: dimnames(3) ! dimensions
+    real(r8)        ,intent(in) :: rdata(:,:,:) ! data to be written
+    character(len=*),intent(in) :: dname    ! name of data
+    logical,optional,intent(in) :: whead    ! write header
+    logical,optional,intent(in) :: wdata    ! write data
+    integer,optional,intent(in) :: file_ind
+    integer         ,intent(out):: rc
+
+    ! local variables
+    integer          :: rcode
+    integer          :: dimid(3)
+    integer          :: dimlen
+    integer          :: i
+    integer          :: prev_eh
+    type(var_desc_t) :: varid
+    character(CL)    :: cunit       ! var units
+    integer          :: lnx
+    logical          :: lwhead, lwdata
+    integer          :: lfile_ind
+    character(*),parameter :: subName = '(med_io_write_r81d) '
+    !-------------------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    lwhead = .true.
+    if (present(whead)) lwhead = whead
+    lwdata = .true.
+    if (present(wdata)) lwdata = wdata
+    lfile_ind = 0
+    if (present(file_ind)) lfile_ind=file_ind
+
+    if (.not.lwhead .and. .not.lwdata) then
+       ! should we write a warning?
+       return
+    endif
+
+    if (lwhead) then
+       call pio_seterrorhandling(io_file(lfile_ind), PIO_BCAST_ERROR, prev_eh)
+       do i=1,3
+          dimlen = size(rdata, i)
+          rcode = pio_inq_dimid(io_file(lfile_ind), dimnames(i), dimid(i))
+          if(rcode /= PIO_NOERR) then
+             rcode = pio_def_dim(io_file(lfile_ind),dimnames(i),dimlen,dimid(i))
+          endif
+       enddo
+       call pio_seterrorhandling(io_file(lfile_ind), prev_eh)
+       rcode = pio_put_att(io_file(lfile_ind),varid,"standard_name",trim(dname))
+       rcode = pio_def_var(io_file(lfile_ind),trim(dname),PIO_DOUBLE,dimid,varid)
+       if (lwdata) call med_io_enddef(filename, file_ind=lfile_ind)
+    endif
+
+    if (lwdata) then
+       rcode = pio_inq_varid(io_file(lfile_ind),trim(dname),varid)
+       rcode = pio_put_var(io_file(lfile_ind),varid,rdata)
+    endif
+
+  end subroutine med_io_write_r83d
 
   !===============================================================================
   subroutine med_io_write_char(filename, rdata, dname, whead, wdata, file_ind, rc)
@@ -1902,6 +2051,59 @@ contains
     call pio_closefile(pioid)
   end subroutine med_io_read_int1d
 
+  subroutine med_io_read_int3d(filename, vm, idata, dname, rc)
+
+    !---------------
+    ! Read 1d integer array from netcdf file
+    !---------------
+
+    use pio , only : var_desc_t, file_desc_t, PIO_BCAST_ERROR, PIO_INTERNAL_ERROR, pio_seterrorhandling
+    use pio , only : pio_get_var, pio_inq_varid, pio_get_att, pio_openfile
+    use pio , only : pio_nowrite, pio_openfile, pio_global
+    use pio , only : pio_closefile
+
+   ! input/output arguments
+    character(len=*), intent(in)    :: filename ! file
+    type(ESMF_VM)                   :: vm
+    integer         , intent(inout) :: idata(:,:,:) ! integer data
+    character(len=*), intent(in)    :: dname    ! name of data
+    integer         , intent(out)   :: rc
+
+    ! local variables
+    integer           :: rcode
+    type(file_desc_t) :: pioid
+    type(var_desc_t)  :: varid
+    character(CL)     :: lversion
+    character(CL)     :: name1
+    character(*),parameter :: subName = '(med_io_read_int1d) '
+    !-------------------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    lversion=trim(version)
+
+    if (med_io_file_exists(vm, filename)) then
+       rcode = pio_openfile(io_subsystem, pioid, pio_iotype, trim(filename),pio_nowrite)
+       call pio_seterrorhandling(pioid,PIO_BCAST_ERROR)
+       rcode = pio_get_att(pioid,pio_global,"file_version",lversion)
+       call pio_seterrorhandling(pioid,PIO_INTERNAL_ERROR)
+    else
+       call ESMF_LogWrite(trim(subname)//'ERROR: file invalid '//trim(filename)//' '//trim(dname), ESMF_LOGMSG_INFO)
+       rc = ESMF_FAILURE
+       return
+    endif
+
+    if (trim(lversion) == trim(version)) then
+       name1 = trim(dname)
+    else
+       name1 = trim(prefix)//trim(dname)
+    endif
+    rcode = pio_inq_varid(pioid,trim(name1),varid)
+    rcode = pio_get_var(pioid,varid,idata)
+
+    call pio_closefile(pioid)
+  end subroutine med_io_read_int3d
+
   !===============================================================================
   subroutine med_io_read_r8(filename, vm, rdata, dname, rc)
 
@@ -1986,6 +2188,58 @@ contains
 
     call pio_closefile(pioid)
   end subroutine med_io_read_r81d
+
+  subroutine med_io_read_r83d(filename, vm, rdata, dname, rc)
+
+    !---------------
+    ! Read 1d double array from netcdf file
+    !---------------
+
+    use pio , only : file_desc_t, var_desc_t, pio_openfile, pio_closefile, pio_seterrorhandling
+    use pio , only : PIO_BCAST_ERROR, PIO_INTERNAL_ERROR, pio_inq_varid, pio_get_var
+    use pio , only : pio_nowrite, pio_openfile, pio_global, pio_get_att
+
+    ! input/output arguments
+    character(len=*), intent(in)    :: filename ! file
+    type(ESMF_VM)                   :: vm
+    real(r8)        , intent(inout) :: rdata(:,:,:) ! real data
+    character(len=*), intent(in)    :: dname    ! name of data
+    integer         , intent(out)   :: rc
+
+    ! local variables
+    integer           :: rcode
+    type(file_desc_T) :: pioid
+    type(var_desc_t)  :: varid
+    character(CL)     :: lversion
+    character(CL)     :: name1
+    character(*),parameter :: subName = '(med_io_read_r81d) '
+    !-------------------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    lversion=trim(version)
+
+    if (med_io_file_exists(vm, filename)) then
+       rcode = pio_openfile(io_subsystem, pioid, pio_iotype, trim(filename),pio_nowrite)
+       call pio_seterrorhandling(pioid,PIO_BCAST_ERROR)
+       rcode = pio_get_att(pioid,pio_global,"file_version",lversion)
+       call pio_seterrorhandling(pioid,PIO_INTERNAL_ERROR)
+    else
+       call ESMF_LogWrite(trim(subname)//'ERROR: file invalid '//trim(filename)//' '//trim(dname), ESMF_LOGMSG_INFO)
+       rc = ESMF_FAILURE
+       return
+    endif
+
+    if (trim(lversion) == trim(version)) then
+       name1 = trim(dname)
+    else
+       name1 = trim(prefix)//trim(dname)
+    endif
+    rcode = pio_inq_varid(pioid,trim(name1),varid)
+    rcode = pio_get_var(pioid,varid,rdata)
+
+    call pio_closefile(pioid)
+  end subroutine med_io_read_r83d
 
   !===============================================================================
   subroutine med_io_read_char(filename, vm, rdata, dname, rc)

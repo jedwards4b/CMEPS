@@ -49,6 +49,8 @@ module med_diag_mod
   public  :: med_phases_diag_ocn
   public  :: med_phases_diag_ice_ice2med
   public  :: med_phases_diag_ice_med2ice
+  public  :: med_diag_restart_write
+  public  :: med_diag_restart_read
 
   private :: med_diag_sum_master
   private :: med_diag_print_atm
@@ -2796,5 +2798,53 @@ contains
     end if
 
   end subroutine add_to_budget_diag
+
+  subroutine med_diag_restart_write(gcomp, restart_file, iam, whead, wdata, rc)
+    use med_io_mod, only: med_io_write
+    type(ESMF_GridComp) :: gcomp
+    character(len=*), intent(in) :: restart_file
+    integer, intent(in) :: iam
+    logical, intent(in) :: whead
+    logical, intent(in) :: wdata
+
+    integer, intent(out) :: rc
+    character(len=*), parameter :: dimnames(3) = (/'nflds','ncmps','npers'/)
+    integer :: dimid(3)
+    integer :: fh
+
+    rc = ESMF_SUCCESS
+    if(wdata) then
+       call med_diag_sum_master(gcomp, rc)
+    endif
+    call med_io_write(restart_file, period_inst, 'period_inst', whead=whead, wdata=wdata, rc=rc)
+    call med_io_write(restart_file, period_day, 'period_day', whead=whead, wdata=wdata, rc=rc)
+    call med_io_write(restart_file, period_mon, 'period_mon', whead=whead, wdata=wdata, rc=rc)
+    call med_io_write(restart_file, period_ann, 'period_ann', whead=whead, wdata=wdata, rc=rc)
+    call med_io_write(restart_file, period_inf, 'period_inf', whead=whead, wdata=wdata, rc=rc)
+    call med_io_write(restart_file, dimnames, budget_global, 'budgets', whead=whead, wdata=wdata, rc=rc)
+    call med_io_write(restart_file, dimnames, int(budget_counter), 'budget_counter', whead=whead, wdata=wdata, rc=rc)
+
+    budget_global = 0.0_R8
+
+  end subroutine med_diag_restart_write
+
+  subroutine med_diag_restart_read(restart_file, vm, iam, rc)
+    use med_io_mod, only: med_io_read
+    character(len=*), intent(IN):: restart_file
+    type(ESMF_VM)          :: vm
+    integer, intent(in) :: iam
+    integer, intent(out) :: rc
+
+    call med_io_read(restart_file, vm, period_inst, 'period_inst', rc)
+    call med_io_read(restart_file, vm, period_day, 'period_day', rc)
+    call med_io_read(restart_file, vm, period_mon, 'period_mon', rc)
+    call med_io_read(restart_file, vm, period_inf, 'period_inf', rc)
+
+    call med_io_read(restart_file, vm, budget_global, 'budgets', rc)
+    call med_io_read(restart_file, vm, budget_counter, 'budget_counter', rc)
+    budget_counter = budget_counter + 1.0_r8
+
+
+  end subroutine med_diag_restart_read
 
 end module med_diag_mod
