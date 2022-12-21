@@ -64,7 +64,8 @@ def _main_func():
 
     if ocn_model == 'mom':
         gmake_args += "USE_FMS=TRUE"
-
+        gmake_args += " USER_INCLDIR=\"-I{}\" ".format(os.path.join(exeroot,"ocn","obj","FMS"))
+        
     comp_classes = case.get_values("COMP_CLASSES")
     for comp in comp_classes:
         model = case.get_value("COMP_{}".format(comp))
