@@ -278,7 +278,7 @@ contains
        if(pio_asyncio_ntasks > 0) then
           if( asyncio_petlist(iopetcnt)==(inst-1)*(ntasks_per_member+pio_asyncio_ntasks) + n) then
              ! Here if asyncio is true and this is an io task
-             iopetcnt = iopetcnt+1
+             if(iopetcnt < pio_asyncio_ntasks) iopetcnt = iopetcnt+1
           else if(petcnt <= ntasks_per_member) then
              ! Here if this is a compute task
              petList(petcnt) = n + (inst-1)*(ntasks_per_member + pio_asyncio_ntasks)
