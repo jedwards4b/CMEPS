@@ -24,7 +24,7 @@ module esm_time_mod
 
   public  :: esm_time_clockInit  ! initialize driver clock (assumes default calendar)
 
-  private :: esm_time_timeInit
+!  private :: esm_time_timeInit
   private :: esm_time_alarmInit
   private :: esm_time_date2ymd
 
@@ -53,12 +53,12 @@ module esm_time_mod
 contains
 !===============================================================================
 
-  subroutine esm_time_clockInit(ensemble_driver, instance_driver, logunit, mastertask, rc)
+  subroutine esm_time_clockInit(ensemble_driver, instance_driver, logunit, maintask, rc)
 
     ! input/output variables
     type(ESMF_GridComp)  :: ensemble_driver, instance_driver
     integer, intent(in)  :: logunit
-    logical, intent(in)  :: mastertask
+    logical, intent(in)  :: maintask
     integer, intent(out) :: rc
 
     ! local variables
@@ -88,14 +88,14 @@ contains
     integer                 :: glc_cpl_dt          ! Glc coupling interval
     integer                 :: rof_cpl_dt          ! Runoff coupling interval
     integer                 :: wav_cpl_dt          ! Wav coupling interval
-    integer                 :: esp_cpl_dt          ! Esp coupling interval
+!    integer                 :: esp_cpl_dt          ! Esp coupling interval
+    character(CS)           :: glc_avg_period      ! Glc avering coupling period
     logical                 :: read_restart
     character(len=CL)       :: restart_file
     character(len=CL)       :: restart_pfile
     character(len=CL)       :: cvalue
     integer                 :: dtime_drv           ! time-step to use
-    integer                 :: yr, mon, day, sec   ! Year, month, day, secs as integers
-    integer                 :: localPet            ! local pet in esm domain
+    integer                 :: yr, mon, day        ! Year, month, day as integers
     integer                 :: unitn               ! unit number
     integer                 :: ierr                ! Return code
     character(CL)           :: tmpstr              ! temporary
@@ -155,7 +155,7 @@ contains
     read(cvalue,*) wav_cpl_dt
 
     dtime_drv = minval((/atm_cpl_dt, lnd_cpl_dt, ocn_cpl_dt, ice_cpl_dt, glc_cpl_dt, rof_cpl_dt, wav_cpl_dt/))
-    if(mastertask) then
+    if(maintask) then
        write(tmpstr,'(i10)') dtime_drv
        call ESMF_LogWrite(trim(subname)//': driver time interval is : '// trim(tmpstr), ESMF_LOGMSG_INFO, rc=rc)
        write(logunit,*)   trim(subname)//': driver time interval is : '// trim(tmpstr)
@@ -193,7 +193,7 @@ contains
 
              restart_pfile = trim(restart_file)//inst_suffix
 
-             if (mastertask) then
+             if (maintask) then
                 call ESMF_LogWrite(trim(subname)//" read rpointer file = "//trim(restart_pfile), &
                      ESMF_LOGMSG_INFO)
                 open(newunit=unitn, file=restart_pfile, form='FORMATTED', status='old',iostat=ierr)
@@ -211,34 +211,27 @@ contains
                    return
                 end if
                 close(unitn)
-                if (mastertask) then
+                if (maintask) then
                    write(logunit,'(a)') trim(subname)//" reading driver restart from file = "//trim(restart_file)
                 end if
                 call esm_time_read_restart(restart_file, start_ymd, start_tod, curr_ymd, curr_tod, rc)
                 if (ChkErr(rc,__LINE__,u_FILE_u)) return
-                
              endif
-
           else
-
-             if (mastertask) then
+             if(maintask) then
                 write(logunit,*) ' NOTE: the current compset has no mediator - which provides the clock restart information'
                 write(logunit,*) '   In this case the restarts are handled solely by the component being used and'
                 write(logunit,*) '   and the driver clock will always be starting from the initial date on restart'
              end if
              curr_ymd = start_ymd
              curr_tod = start_tod
-             
-          end if
-
+          endif
        else
-
           curr_ymd = start_ymd
-          curr_tod = start_tod
-
+          curr_tod = start_tod                                            
        end if ! end if read_restart
     endif
-    if(mastertask) then
+    if(maintask) then
        bcastID(1) = myid
        tmp(1) = start_ymd ; tmp(2) = start_tod
        tmp(3) = curr_ymd  ; tmp(4) = curr_tod
@@ -260,7 +253,7 @@ contains
     call ESMF_TimeSet( StartTime, yy=yr, mm=mon, dd=day, s=start_tod, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    if(mastertask) then
+    if(maintask) then
        write(tmpstr,'(i10)') start_ymd
        call ESMF_LogWrite(trim(subname)//': driver start_ymd: '// trim(tmpstr), ESMF_LOGMSG_INFO)
        write(logunit,*)   trim(subname)//': driver start_ymd: '// trim(tmpstr)
@@ -273,7 +266,8 @@ contains
     call esm_time_date2ymd(curr_ymd, yr, mon, day)
     call ESMF_TimeSet( CurrTime, yy=yr, mm=mon, dd=day, s=curr_tod, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if(mastertask) then
+
+    if(maintask) then
        write(tmpstr,'(i10)') curr_ymd
        call ESMF_LogWrite(trim(subname)//': driver curr_ymd: '// trim(tmpstr), ESMF_LOGMSG_INFO)
        write(logunit,*)   trim(subname)//': driver curr_ymd: '// trim(tmpstr)
@@ -287,6 +281,8 @@ contains
     call esm_time_date2ymd(ref_ymd, yr, mon, day)
     call ESMF_TimeSet( RefTime, yy=yr, mm=mon, dd=day, s=ref_tod, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+
     call ESMF_TimeIntervalSet( TimeStep, s=dtime_drv, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -331,7 +327,7 @@ contains
        stop_tod = 0
     endif
 
-    if (mastertask) then
+    if (maintask) then
        write(tmpstr,'(i10)') stop_ymd
        call ESMF_LogWrite(trim(subname)//': driver stop_ymd: '// trim(tmpstr), ESMF_LOGMSG_INFO)
        write(logunit,*)   trim(subname)//': driver stop_ymd: '// trim(tmpstr)
@@ -408,7 +404,6 @@ contains
    type(ESMF_Time)         :: CurrTime         ! Current Time
    type(ESMF_Time)         :: NextAlarm        ! Next restart alarm time
    type(ESMF_TimeInterval) :: AlarmInterval    ! Alarm interval
-   integer                 :: sec
    character(len=*), parameter :: subname = '(med_time_alarmInit): '
    !-------------------------------------------------------------------------------
 
@@ -579,7 +574,7 @@ contains
  end subroutine esm_time_alarmInit
 
  !===============================================================================
-
+#ifdef UNUSEDFUNCTION
  subroutine esm_time_timeInit( Time, ymd, cal, tod, desc, logunit )
 
    !  Create the ESMF_Time object corresponding to the given input time, given in
@@ -623,7 +618,7 @@ contains
    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
  end subroutine esm_time_timeInit
-
+#endif
  !===============================================================================
 
  subroutine esm_time_date2ymd (date, year, month, day)
