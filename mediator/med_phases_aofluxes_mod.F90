@@ -58,7 +58,7 @@ module med_phases_aofluxes_mod
   ! Private routines
   !--------------------------------------------------------------------------
 
-  private :: med_aofluxes_init
+  public :: med_aofluxes_init
   private :: med_aofluxes_init_ogrid
   private :: med_aofluxes_init_agrid
   private :: med_aofluxes_init_xgrid
@@ -151,6 +151,9 @@ module med_phases_aofluxes_mod
      real(R8) , pointer :: ssq         (:) => null() ! saved sq
   end type aoflux_out_type
 
+  type(aoflux_in_type)         :: aoflux_in
+  type(aoflux_out_type)        :: aoflux_out
+  logical                      :: aoflux_created = .false.
   character(*), parameter :: u_FILE_u = &
        __FILE__
 
@@ -270,10 +273,7 @@ contains
 
     ! local variables
     type(InternalState)          :: is_local
-    type(aoflux_in_type)  , save :: aoflux_in
-    type(aoflux_out_type) , save :: aoflux_out
-    logical               , save :: aoflux_created
-    logical               , save :: first_call = .true.
+    logical               , save :: first_call = .false.
     character(len=*),parameter :: subname=' (med_phases_aofluxes_run) '
     !---------------------------------------
 
@@ -284,25 +284,25 @@ contains
     call ESMF_GridCompGetInternalState(gcomp, is_local, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    if (first_call) then
-       ! If field bundles have been created for the ocean/atmosphere flux computation
-       if ( ESMF_FieldBundleIsCreated(is_local%wrap%FBMed_aoflux_a, rc=rc) .and. &
-            ESMF_FieldBundleIsCreated(is_local%wrap%FBMed_aoflux_o, rc=rc)) then
+    ! if (first_call) then
+    !    ! If field bundles have been created for the ocean/atmosphere flux computation
+    !    if ( ESMF_FieldBundleIsCreated(is_local%wrap%FBMed_aoflux_a, rc=rc) .and. &
+    !         ESMF_FieldBundleIsCreated(is_local%wrap%FBMed_aoflux_o, rc=rc)) then
 
-          ! Allocate memroy for the aoflux module data type (mediator atm/ocn field bundle on the ocean grid)
-          call med_aofluxes_init(gcomp, aoflux_in, aoflux_out, rc=rc)
-          if (chkerr(rc,__LINE__,u_FILE_u)) return
+    !       ! Allocate memory for the aoflux module data type (mediator atm/ocn field bundle on the ocean grid)
+    !       call med_aofluxes_init(gcomp, aoflux_in, aoflux_out, rc=rc)
+    !       if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-          aoflux_created = .true.
-       else
-          aoflux_created = .false.
-       end if
+    !       aoflux_created = .true.
+    !    else
+    !       aoflux_created = .false.
+    !    end if
 
-       ! Now set first_call to .false.
-       first_call = .false.
-    end if
-
-    ! Return if there is no aoflux has not been created
+    !    ! Now set first_call to .false.
+    !    first_call = .false.
+       
+    ! end if
+    ! Return if the aoflux has not been created
     if ( aoflux_created) then
        ! Start time timer
        call t_startf('MED:'//subname)
@@ -310,10 +310,11 @@ contains
           call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
        endif
        call memcheck(subname, 5, maintask)
-
+       print *,__FILE__,__LINE__,sum(aoflux_in%dens)
        ! Calculate atm/ocn fluxes on the destination grid
        call med_aofluxes_update(gcomp, aoflux_in, aoflux_out, rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
+       print *,__FILE__,__LINE__,sum(aoflux_in%dens)
 
        ! Write mediator aofluxes
        call med_phases_history_write_med(gcomp, rc=rc)
@@ -330,7 +331,7 @@ contains
   end subroutine med_phases_aofluxes_run
 
   !================================================================================
-  subroutine med_aofluxes_init(gcomp, aoflux_in, aoflux_out, rc)
+  subroutine med_aofluxes_init(gcomp, rc)
 
     use NUOPC           , only : NUOPC_CompAttributeGet
     use ESMF            , only : ESMF_LogWrite, ESMF_LOGMSG_INFO, ESMF_LogFoundError
@@ -350,8 +351,8 @@ contains
 
     ! input/output variables
     type(ESMF_GridComp)   , intent(inout) :: gcomp
-    type(aoflux_in_type)  , intent(inout) :: aoflux_in
-    type(aoflux_out_type) , intent(inout) :: aoflux_out
+!    type(aoflux_in_type)  , intent(inout) :: aoflux_in
+!    type(aoflux_out_type) , intent(inout) :: aoflux_out
     integer               , intent(out)   :: rc
 
     ! local variables
@@ -472,7 +473,7 @@ contains
       call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
     endif
     call t_stopf('MED:'//subname)
-
+    aoflux_created = .true.
   end subroutine med_aofluxes_init
 
   !===============================================================================
@@ -944,7 +945,7 @@ contains
     !  2) Update atmosphere/ocean surface fluxes
     !  3) Map aoflux output to relevant atm/ocn grid(s)
     !-----------------------------------------------------------------------
-
+    use ESMF           , only : ESMF_END_ABORT, ESMF_LOGMSG_ERROR
     use ESMF           , only : ESMF_GridComp
     use ESMF           , only : ESMF_LogWrite, ESMF_LogMsg_Info, ESMF_SUCCESS
     use med_map_mod    , only : med_map_field_packed, med_map_rh_is_created
@@ -970,6 +971,7 @@ contains
     real(r8), parameter      :: p0 = 100000.0_r8           ! reference pressure in Pa
     real(r8), parameter      :: rcp = 0.286_r8             ! gas constant of air / specific heat capacity at a constant pressure
     real(r8), parameter      :: rdair = 287.058_r8         ! dry air gas constant in J/K/kg
+    character(len=CL)        :: msg
     character(*),parameter   :: subName = '(med_aofluxes_update) '
     !-----------------------------------------------------------------------
 
@@ -1040,6 +1042,13 @@ contains
     !----------------------------------
     ! Update atmosphere/ocean surface fluxes
     !----------------------------------
+    do n=1,aoflux_in%lsize
+       if(aoflux_in%dens(n) .eq. 0 .and. aoflux_in%mask(n) .ne. 0) then
+          write(msg,*) trim(subname)//' invalid atm ocn point mapping, n=',n
+          call ESMF_LogWrite(msg, ESMF_LOGMSG_ERROR)
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       endif
+    enddo
 
 #ifdef CESMCOUPLED
     call flux_atmocn (logunit=logunit, &

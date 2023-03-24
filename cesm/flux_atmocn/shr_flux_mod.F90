@@ -257,7 +257,6 @@ contains
     real(R8)    :: tdiff(nMax)               ! tbot - ts
     real(R8)    :: vscl
 
-
     qsat(Tk)   = 640380.0_R8 / exp(5107.4_R8/Tk)
     cdn(Umps)  =   0.0027_R8 / Umps + 0.000142_R8 + 0.0000764_R8 * Umps
     psimhu(xd) = log((1.0_R8+xd*(2.0_R8+xd))*(1.0_R8+xd*xd)/8.0_R8) - 2.0_R8*atan(xd) + 1.571_R8
@@ -287,8 +286,8 @@ contains
     !  COARE:
     !   o use COAREv3.0 function (tht 22/11/2013)
     !-------------------------------------------------------------------------------
-
     if (debug > 0) write(logunit,F00) "enter"
+    
 
     if (present(missval)) then
        spval = missval
@@ -308,14 +307,18 @@ contains
     !!                         = 1 : COARE algorithm
     !!                         = 2 : UA algorithm (separate subroutine)
     !!.................................................................
-
     ! Default flux scheme.
     if (ocn_surface_flux_scheme .eq. 0) then
 
        al2 = log(zref/ztref)
        DO n=1,nMax
           if (mask(n) /= 0) then
-
+!             print *,__FILE__,__LINE__,n,zbot(n),ubot(n),vbot(n),thbot(n),qbot(n)
+!             print *,__FILE__,__LINE__,n,s16O(n),sHDO(n),s18O(n),r16o(n),rhdo(n)
+!             print *,__FILE__,__LINE__,n,r18o(n),pslv(n),us(n)
+!             print *,__FILE__,__LINE__,n,vs(n),ts(n)
+!             print *,__FILE__,__LINE__,n,rbot(n)
+!             print *,__FILE__,__LINE__,n,tbot(n)
              !--- compute some needed quantities ---
              vmag   = max(seq_flux_atmocn_minwind, sqrt( (ubot(n)-us(n))**2 + (vbot(n)-vs(n))**2) )
              if (use_coldair_outbreak_mod) then

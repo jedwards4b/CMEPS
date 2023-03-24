@@ -661,6 +661,7 @@ contains
     use NUOPC , only : NUOPC_CompAttributeGet, NUOPC_CompAttributeSet, NUOPC_CompAttributeAdd
     use esmFlds, only : med_fldlist_init1, med_fld_GetFldInfo, med_fldList_entry_type
     use med_phases_history_mod, only : med_phases_history_init
+    use med_phases_aofluxes_mod, only : med_aofluxes_init
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -915,6 +916,9 @@ contains
           end do
        end if
     end do ! end of ncomps loop
+
+    call med_aofluxes_init(gcomp, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     if (profile_memory) call ESMF_VMLogMemInfo("Leaving "//trim(subname))
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
@@ -1906,7 +1910,7 @@ contains
       RETURN
 
     endif  ! end first_call if-block
-
+    print *,__FILE__,__LINE__,'after first call block'
     !----------------------------------------------------------
     ! Create FBfrac field bundles and initialize fractions
     ! This has some complex dependencies on fractions from import States
@@ -1925,6 +1929,7 @@ contains
 
     if (trim(coupling_mode(1:5)) /= 'nems_') then
        if (is_local%wrap%comp_present(compocn) .or. is_local%wrap%comp_present(compatm)) then
+          print *,__FILE__,__LINE__,'call ocnalb run'
           call med_phases_ocnalb_run(gcomp, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
