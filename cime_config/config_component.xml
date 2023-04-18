@@ -786,8 +786,8 @@
 
   <entry id="GPU_TYPE">
     <type>char</type>
-    <valid_values>none, v100, a100, mi250</valid_values>
-    <default_value>none</default_value>
+    <valid_values>v100, a100, mi250</valid_values>
+    <default_value/>
     <group>build_def</group>
     <file>env_build.xml</file>
     <desc>If set will compile and submit with this gpu type enabled </desc>
