@@ -182,7 +182,6 @@ contains
    case (optNSteps,trim(optNSteps)//'s')
       call ESMF_ClockGet(clock, TimeStep=AlarmInterval, rc=rc)
       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-      AlarmInterval = AlarmInterval * opt_n
       update_nextalarm  = .true.
 
    case (optNSeconds,trim(optNSeconds)//'s')

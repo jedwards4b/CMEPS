@@ -609,7 +609,6 @@ contains
        end if
        call ESMF_ClockGet(clock, TimeStep=AlarmInterval, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
-       AlarmInterval = AlarmInterval * opt_n
        update_nextalarm  = .true.
 
     case (optNStep)
