@@ -18,6 +18,8 @@ module esm_time_mod
   use ESMF                , only : operator(<=), operator(>), operator(==)
   use NUOPC               , only : NUOPC_CompAttributeGet
   use esm_utils_mod       , only : chkerr
+  use nuopc_shr_methods, only : optNONE, optNever, optNSteps, optNSeconds, optNMinutes, optNHours,optNDays
+  use nuopc_shr_methods, only : optNMonths, optNYears, optMonthly, optYearly, optDate, optEnd, optGLCCouplingPeriod
 
   implicit none
   private    ! default private
@@ -27,22 +29,6 @@ module esm_time_mod
 !  private :: esm_time_timeInit
   private :: esm_time_alarmInit
   private :: esm_time_date2ymd
-
-  ! Clock and alarm options
-  character(len=*), private, parameter :: &
-       optNONE           = "none"    , &
-       optNever          = "never"   , &
-       optNSteps         = "nstep"   , &
-       optNSeconds       = "nsecond" , &
-       optNMinutes       = "nminute" , &
-       optNHours         = "nhour"   , &
-       optNDays          = "nday"    , &
-       optNMonths        = "nmonth"  , &
-       optNYears         = "nyear"   , &
-       optMonthly        = "monthly" , &
-       optYearly         = "yearly"  , &
-       optDate           = "date"    , &
-       optGLCCouplingPeriod = "glc_coupling_period"
 
   ! Module data
   integer, parameter          :: SecPerDay = 86400 ! Seconds per day
@@ -54,7 +40,10 @@ contains
 !===============================================================================
 
   subroutine esm_time_clockInit(ensemble_driver, instance_driver, logunit, maintask, rc)
-
+    ! dtime_driver is an ESMF_TimeInterval, it is initialized here and shared with nuopc_shr_methods
+    ! this was done to avoid modifying the call to alarmInit in all of the model caps.
+    ! it is only used in the case of optNSteps
+    use nuopc_shr_methods, only : dtime_driver
     ! input/output variables
     type(ESMF_GridComp)  :: ensemble_driver, instance_driver
     integer, intent(in)  :: logunit
@@ -125,7 +114,7 @@ contains
     !---------------------------------------------------------------------------
     ! Determine driver clock timestep
     !---------------------------------------------------------------------------
-
+    
     call NUOPC_CompAttributeGet(ensemble_driver, name="atm_cpl_dt", value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) atm_cpl_dt
@@ -160,6 +149,7 @@ contains
        call ESMF_LogWrite(trim(subname)//': driver time interval is : '// trim(tmpstr), ESMF_LOGMSG_INFO, rc=rc)
        write(logunit,*)   trim(subname)//': driver time interval is : '// trim(tmpstr)
     endif
+
     call ESMF_GridCompGet(ensemble_driver, vm=envm, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     
@@ -283,9 +273,9 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
 
-    call ESMF_TimeIntervalSet( TimeStep, s=dtime_drv, rc=rc )
+    call ESMF_TimeIntervalSet(dtime_driver, s=dtime_drv, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
+    TimeStep = dtime_driver
     !---------------------------------------------------------------------------
     ! Create an instance_driver clock
     !---------------------------------------------------------------------------

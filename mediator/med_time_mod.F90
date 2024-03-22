@@ -51,7 +51,7 @@ contains
 !===============================================================================
 
   subroutine med_time_alarmInit( clock, alarm, option, &
-       opt_n, opt_ymd, opt_tod, reftime, alarmname, advance_clock, rc)
+       opt_n, opt_ymd, opt_tod, reftime, alarmname, advance_clock, driver_clock, rc)
 
     ! Setup an alarm in a clock
     ! Notes: The ringtime sent to AlarmCreate MUST be the next alarm
@@ -75,7 +75,7 @@ contains
     character(len=*) , optional , intent(in)    :: alarmname     ! alarm name
     logical          , optional , intent(in)    :: advance_clock ! advance clock to trigger alarm
     integer                     , intent(out)   :: rc            ! Return code
-
+    type(ESMF_Clock) , optional , intent(in)    :: driver_clock  ! driver clock for nsteps option
     ! local variables
     type(ESMF_Calendar)     :: cal              ! calendar
     integer                 :: lymd             ! local ymd
@@ -180,8 +180,9 @@ contains
       update_nextalarm  = .false.
 
    case (optNSteps,trim(optNSteps)//'s')
-      call ESMF_ClockGet(clock, TimeStep=AlarmInterval, rc=rc)
+      call ESMF_ClockGet(driver_clock, TimeStep=AlarmInterval, rc=rc)
       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+      AlarmInterval = AlarmInterval * opt_n
       update_nextalarm  = .true.
 
    case (optNSeconds,trim(optNSeconds)//'s')

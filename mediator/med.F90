@@ -2265,7 +2265,7 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        read(cvalue,*) stop_ymd
        call med_time_alarmInit(mclock, stop_alarm, stop_option, opt_n=stop_n, opt_ymd=stop_ymd, &
-            alarmname='alarm_stop', rc=rc)
+            alarmname='alarm_stop', driver_clock=dclock, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        stopalarmcreated = .true.
     end if

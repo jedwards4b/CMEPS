@@ -56,6 +56,7 @@ contains
     ! local variables
     type(ESMF_Alarm)        :: alarm
     type(ESMF_Clock)        :: mclock
+    type(ESMF_Clock)        :: driver_clock
     type(ESMF_TimeInterval) :: mtimestep
     type(ESMF_Time)         :: mCurrTime
     integer                 :: timestep_length
@@ -70,7 +71,7 @@ contains
     rc = ESMF_SUCCESS
 
     ! Get model clock
-    call NUOPC_ModelGet(gcomp, modelClock=mclock,  rc=rc)
+    call NUOPC_ModelGet(gcomp, driverClock=driver_clock, modelClock=mclock,  rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Determine restart frequency
@@ -83,8 +84,9 @@ contains
     ! Set alarm for instantaneous mediator restart output
     call ESMF_ClockGet(mclock, currTime=mCurrTime,  rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
     call med_time_alarmInit(mclock, alarm, option=restart_option, opt_n=restart_n, &
-         reftime=mcurrTime, alarmname='alarm_restart', rc=rc)
+         reftime=mcurrTime, alarmname='alarm_restart', driver_clock=driver_clock, rc=rc)
     call ESMF_AlarmSet(alarm, clock=mclock, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
