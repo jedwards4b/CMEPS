@@ -10,12 +10,12 @@ module med_enthalpy_mod
   use med_internalstate_mod, only : compocn, compatm, comprof, InternalState
   use med_internalstate_mod , only : logunit, maintask
   use perf_mod, only : t_startf, t_stopf
-    
+
 
   implicit none
   public :: med_compute_enthalpy
   logical, public :: mediator_compute_enthalpy = .false.
-  
+
   real(r8) :: global_htot_corr(1) = 0._r8
   character(*), parameter :: u_FILE_u  = &
        __FILE__
@@ -38,12 +38,12 @@ contains
     real(r8), pointer :: snowl(:), snowc(:), ofrac(:)
     real(r8), pointer :: hrain(:), hsnow(:), hevap(:), hcond(:), hrofl(:), hrofi(:)
     real(r8), pointer :: hrain_a(:), hevap_a(:), hsnow_a(:), hrofl_a(:), hrofi_a(:)
-    
+
     real(r8), allocatable :: hcorr(:)
     real(r8), pointer :: areas(:)
     real(r8), parameter :: glob_area_inv = 1._r8 / (4._r8 * pi)
     real(r8) :: local_htot_corr(1)
-    
+
     integer :: n, nmax
     character(len=*), parameter:: subname = "med_compute_enthalpy"
 
@@ -53,15 +53,15 @@ contains
     call FB_GetFldPtr(is_local%wrap%FBImp(compocn,compocn), 'So_t', tocn, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     nmax = size(tocn)
-       
-    if  (FB_fldchk(is_local%wrap%FBExp(compocn), 'Sa_tbot'    , rc=rc)) then 
+
+    if  (FB_fldchk(is_local%wrap%FBExp(compocn), 'Sa_tbot'    , rc=rc)) then
        call FB_GetFldPtr(is_local%wrap%FBExp(compocn), 'Sa_tbot', tbot, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
        call FB_GetFldPtr(is_local%wrap%FBImp(compatm, compocn), 'Sa_tbot', tbot, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     endif
-    
+
     if(FB_fldchk(is_local%wrap%FBExp(compocn), 'Faxa_rain', rc)) then
        call FB_GetFldPtr(is_local%wrap%FBExp(compocn), 'Faxa_rain' , rain, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -73,14 +73,14 @@ contains
        allocate(rain(nmax))
        rain = rainl + rainc
     endif
-       
+
     if(FB_fldchk(is_local%wrap%FBExp(compocn), 'Foxx_hrain', rc)) then
        call FB_GetFldPtr(is_local%wrap%FBExp(compocn), 'Foxx_hrain', hrain, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
        allocate(hrain(nmax))
     endif
-    
+
     if(FB_fldchk(is_local%wrap%FBExp(compocn), 'Foxx_evap', rc)) then
        call FB_GetFldPtr(is_local%wrap%FBExp(compocn), 'Foxx_evap' , evap, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -88,7 +88,7 @@ contains
        call FB_GetFldPtr(is_local%wrap%FBExp(compatm), 'Faxx_evap' , evap, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     endif
-    
+
     if(FB_fldchk(is_local%wrap%FBExp(compocn), 'Foxx_hevap', rc)) then
        call FB_GetFldPtr(is_local%wrap%FBExp(compocn), 'Foxx_hevap', hevap, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -120,7 +120,7 @@ contains
     else
        allocate(hsnow(nmax))
     endif
-    
+
     if(FB_fldchk(is_local%wrap%FBExp(compocn), 'Foxx_rofl', rc)) then
        call FB_GetFldPtr(is_local%wrap%FBExp(compocn), 'Foxx_rofl' , rofl, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -152,7 +152,7 @@ contains
     call FB_GetFldPtr(is_local%wrap%FBfrac(compocn), 'ofrac' , ofrac, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    if       (FB_fldchk(is_local%wrap%FBImp(compatm,compocn), 'Faxa_hrain' , rc=rc)) then 
+    if       (FB_fldchk(is_local%wrap%FBImp(compatm,compocn), 'Faxa_hrain' , rc=rc)) then
        call ESMF_FieldBundleGet(is_local%wrap%FBImp(compatm, compatm), 'Faxa_hrain', field=fld_a, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -161,26 +161,32 @@ contains
 
        call med_map_field(fld_a, fld_o, is_local%wrap%RH(compatm, compocn,:), mapconsf, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       
+
        call FB_GetFldPtr(is_local%wrap%FBImp(compatm, compocn), 'Faxa_hrain', hrain_a, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        do n = 1,nmax
-          hrain(n)  = (hrain_a(n) - tkfrz*rain(n)*cpfw) * ofrac(n)
+          !hrain(n)  = (hrain_a(n) - tkfrz*rain(n)*cpfw) * ofrac(n)
+          ! GMM, PHL
+          hrain(n)  = hrain_a(n) * ofrac(n)
        enddo
     else
-       if  (FB_fldchk(is_local%wrap%FBExp(compocn), 'Sa_tbot'    , rc=rc)) then 
+       if  (FB_fldchk(is_local%wrap%FBExp(compocn), 'Sa_tbot'    , rc=rc)) then
           do n = 1,nmax
-             hrain(n)  = max((tbot(n) - tkfrz), 0._r8) * rain(n) * cpfw * ofrac(n)
+             !hrain(n)  = max((tbot(n) - tkfrz), 0._r8) * rain(n) * cpfw * ofrac(n)
+             ! GMM, PHL
+             hrain(n)  = (tbot(n) - tkfrz) * rain(n) * cpfw * ofrac(n)
           enddo
-       else 
+       else
           do n = 1,nmax
-             hrain(n)  = max((tocn(n) - tkfrz), 0._r8) * rain(n) * cpfw * ofrac(n)
+             !hrain(n)  = max((tocn(n) - tkfrz), 0._r8) * rain(n) * cpfw * ofrac(n)
+             ! GMM, PHL
+             hrain(n)  = (tocn(n) - tkfrz) * rain(n) * cpfw * ofrac(n)
           enddo
        endif
        hrain_a => hrain
     endif
 
-    if       (FB_fldchk(is_local%wrap%FBImp(compatm, compocn), 'Faxa_hevap' , rc=rc)) then 
+    if       (FB_fldchk(is_local%wrap%FBImp(compatm, compocn), 'Faxa_hevap' , rc=rc)) then
        call ESMF_FieldBundleGet(is_local%wrap%FBImp(compatm, compatm), 'Faxa_hevap', field=fld_a, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -194,18 +200,24 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        do n = 1,nmax
-          hevap(n)  = (min(hevap_a(n),0._r8) - tkfrz * min(evap(n),0._r8) * cpwv) * ofrac(n) 
-          hcond(n)  = (max(hevap_a(n),0._r8) - tkfrz * max(evap(n),0._r8) * cpwv) * ofrac(n)
+          !hevap(n)  = (min(hevap_a(n),0._r8) - tkfrz * min(evap(n),0._r8) * cpwv) * ofrac(n)
+          !hcond(n)  = (max(hevap_a(n),0._r8) - tkfrz * max(evap(n),0._r8) * cpwv) * ofrac(n)
+          ! GMM, PHL
+          hevap(n)  = hevap_a(n) * ofrac(n)
+          hcond(n)  = 0._r8
        enddo
     else
        do n = 1,nmax
-          hevap(n)  = (tocn(n) - tkfrz) * min(evap(n),0._r8) * cpwv * ofrac(n)
-          hcond(n)  = (tocn(n) - tkfrz) * max(evap(n),0._r8) * cpwv * ofrac(n)
+          !hevap(n)  = (tocn(n) - tkfrz) * min(evap(n),0._r8) * cpwv * ofrac(n)
+          !hcond(n)  = (tocn(n) - tkfrz) * max(evap(n),0._r8) * cpwv * ofrac(n)
+          ! GMM, PHL
+          hevap(n)  = (tocn(n) - tkfrz) * evap(n) * cpwv * ofrac(n)
+          hcond(n)  = 0._r8
        enddo
        hevap_a => hevap
     endif
 
-    if        (FB_fldchk(is_local%wrap%FBImp(compatm, compocn), 'Faxa_hsnow' , rc=rc)) then 
+    if        (FB_fldchk(is_local%wrap%FBImp(compatm, compocn), 'Faxa_hsnow' , rc=rc)) then
        call ESMF_FieldBundleGet(is_local%wrap%FBImp(compatm, compatm), 'Faxa_hsnow', field=fld_a, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -218,17 +230,23 @@ contains
        call FB_GetFldPtr(is_local%wrap%FBImp(compatm, compocn), 'Faxa_hsnow', hsnow_a, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        do n = 1,nmax
-          hsnow(n)  = (hsnow_a(n) - tkfrz * snow(n) * cpice) * ofrac(n)
+          !hsnow(n)  = (hsnow_a(n) - tkfrz * snow(n) * cpice) * ofrac(n)
+          ! GMM, PHL
+          hsnow(n)  = hsnow_a(n) * ofrac(n)
        enddo
     else
-      
-       if  (FB_fldchk(is_local%wrap%FBExp(compocn), 'Sa_tbot'    , rc=rc)) then 
+
+       if  (FB_fldchk(is_local%wrap%FBExp(compocn), 'Sa_tbot'    , rc=rc)) then
           do n = 1,nmax
-             hsnow(n)  = min((tbot(n) - tkfrz), 0._r8) * snow(n)  * cpice * ofrac(n)
+             !hsnow(n)  = min((tbot(n) - tkfrz), 0._r8) * snow(n)  * cpice * ofrac(n)
+             ! GMM, PHL
+             hsnow(n)  = (tbot(n) - tkfrz) * snow(n)  * cpice * ofrac(n)
           enddo
-       else 
+       else
           do n = 1,nmax
-             hsnow(n)  = min((tocn(n) - tkfrz), 0._r8) * snow(n)  * cpice * ofrac(n)
+             !hsnow(n)  = min((tocn(n) - tkfrz), 0._r8) * snow(n)  * cpice * ofrac(n)
+             ! GMM, PHL
+             hsnow(n)  = (tocn(n) - tkfrz) * snow(n)  * cpice * ofrac(n)
           enddo
        endif
        hsnow_a => hsnow
@@ -250,19 +268,19 @@ contains
     if(.not. FB_fldchk(is_local%wrap%FBExp(compocn), 'Faxa_rain', rc)) deallocate(rain)
     if(.not. FB_fldchk(is_local%wrap%FBExp(compocn), 'Faxa_snow', rc)) deallocate(snow)
 
-    
+
     ! Determine enthalpy correction factor that will be added to the sensible heat flux sent to the atm
     ! Areas here in radians**2 - this is an instantaneous snapshot that will be sent to the atm - only
     ! need to calculate this if data is sent back to the atm
-    
+
     if (FB_fldchk(is_local%wrap%FBExp(compatm), 'Faxx_sen', rc=rc)) then
        allocate(hcorr(nmax))
        areas => is_local%wrap%mesh_info(compocn)%areas
        do n = 1,nmax
-          hcorr(n) = (hrain_a(n) + hsnow_a(n) + hevap_a(n) + hrofl_a(n) + hrofi_a(n)) * &
-               areas(n) * glob_area_inv
-
-          !hcorr(n) = (hrofl_a(n) + hrofi_a(n)) *areas(n) *glob_area_inv    
+          !hcorr(n) = (hrain_a(n) + hsnow_a(n) + hevap_a(n) + hrofl_a(n) + hrofi_a(n)) * &
+          !     areas(n) * glob_area_inv
+          ! GMM, PHL
+          hcorr(n) = (hrofl_a(n) + hrofi_a(n)) *areas(n) *glob_area_inv
        end do
 
        ! Determine sum of enthalpy correction for each hcorr index locally
