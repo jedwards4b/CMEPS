@@ -158,48 +158,48 @@ contains
     !--- input arguments --------------------------------
     integer    ,intent(in) :: logunit
     integer(IN),intent(in) :: nMax        ! data vector length
-    integer(IN),intent(in) :: mask (nMax) ! ocn domain mask       0 <=> out of domain
+    integer(IN),intent(in) :: mask (:) ! ocn domain mask       0 <=> out of domain
     integer(IN),intent(in) :: ocn_surface_flux_scheme
     logical ,intent(in)    :: add_gusts
-    real(R8)   ,intent(in) :: zbot (nMax) ! atm level height      (m)
-    real(R8)   ,intent(in) :: ubot (nMax) ! atm u wind            (m/s)
-    real(R8)   ,intent(in) :: vbot (nMax) ! atm v wind            (m/s)
-    real(R8)   ,intent(in) :: thbot(nMax) ! atm potential T       (K)
-    real(R8)   ,intent(in) :: qbot (nMax) ! atm specific humidity (kg/kg)
-    real(R8)   ,intent(in) :: rainc(nMax) ! atm precip for convective gustiness (kg/m^3) - RBN 24Nov2008/MDF 31Jan2022
-    real(R8)   ,intent(in) :: s16O (nMax) ! atm H216O tracer conc. (kg/kg)
-    real(R8)   ,intent(in) :: sHDO (nMax) ! atm HDO tracer conc.  (kg/kg)
-    real(R8)   ,intent(in) :: s18O (nMax) ! atm H218O tracer conc. (kg/kg)
-    real(R8)   ,intent(in) :: r16O (nMax) ! ocn H216O tracer ratio/Rstd
-    real(R8)   ,intent(in) :: rHDO (nMax) ! ocn HDO tracer ratio/Rstd
-    real(R8)   ,intent(in) :: r18O (nMax) ! ocn H218O tracer ratio/Rstd
-    real(R8)   ,intent(in) :: rbot (nMax) ! atm air density       (kg/m^3)
-    real(R8)   ,intent(in) :: tbot (nMax) ! atm T                 (K)
-    real(R8)   ,intent(in) :: pslv (nMax) ! atm sea level pressure(Pa)
-    real(R8)   ,intent(in) :: us   (nMax) ! ocn u-velocity        (m/s)
-    real(R8)   ,intent(in) :: vs   (nMax) ! ocn v-velocity        (m/s)
-    real(R8)   ,intent(in) :: ts   (nMax) ! ocn temperature       (K)
+    real(R8)   ,intent(in) :: zbot (:) ! atm level height      (m)
+    real(R8)   ,intent(in) :: ubot (:) ! atm u wind            (m/s)
+    real(R8)   ,intent(in) :: vbot (:) ! atm v wind            (m/s)
+    real(R8)   ,intent(in) :: thbot(:) ! atm potential T       (K)
+    real(R8)   ,intent(in) :: qbot (:) ! atm specific humidity (kg/kg)
+    real(R8)   ,intent(in) :: rainc(:) ! atm precip for convective gustiness (kg/m^3) - RBN 24Nov2008/MDF 31Jan2022
+    real(R8)   ,intent(in) :: s16O (:) ! atm H216O tracer conc. (kg/kg)
+    real(R8)   ,intent(in) :: sHDO (:) ! atm HDO tracer conc.  (kg/kg)
+    real(R8)   ,intent(in) :: s18O (:) ! atm H218O tracer conc. (kg/kg)
+    real(R8)   ,intent(in) :: r16O (:) ! ocn H216O tracer ratio/Rstd
+    real(R8)   ,intent(in) :: rHDO (:) ! ocn HDO tracer ratio/Rstd
+    real(R8)   ,intent(in) :: r18O (:) ! ocn H218O tracer ratio/Rstd
+    real(R8)   ,intent(in) :: rbot (:) ! atm air density       (kg/m^3)
+    real(R8)   ,intent(in) :: tbot (:) ! atm T                 (K)
+    real(R8)   ,intent(in) :: pslv (:) ! atm sea level pressure(Pa)
+    real(R8)   ,intent(in) :: us   (:) ! ocn u-velocity        (m/s)
+    real(R8)   ,intent(in) :: vs   (:) ! ocn v-velocity        (m/s)
+    real(R8)   ,intent(in) :: ts   (:) ! ocn temperature       (K)
     real(R8)   ,intent(in) :: seq_flux_atmocn_minwind        ! minimum wind speed for atmocn      (m/s)
 
     !--- output arguments -------------------------------
-    real(R8),intent(out)  ::  sen  (nMax) ! heat flux: sensible    (W/m^2)
-    real(R8),intent(out)  ::  lat  (nMax) ! heat flux: latent      (W/m^2)
-    real(R8),intent(out)  ::  lwup (nMax) ! heat flux: lw upward   (W/m^2)
-    real(R8),intent(out)  ::  evap (nMax) ! water flux: evap  ((kg/s)/m^2)
-    real(R8),intent(out)  ::  evap_16O (nMax) ! water flux: evap ((kg/s/m^2)
-    real(R8),intent(out)  ::  evap_HDO (nMax) ! water flux: evap ((kg/s)/m^2)
-    real(R8),intent(out)  ::  evap_18O (nMax) ! water flux: evap ((kg/s/m^2)
-    real(R8),intent(out)  ::  taux (nMax) ! surface stress, zonal      (N)
-    real(R8),intent(out)  ::  tauy (nMax) ! surface stress, maridional (N)
-    real(R8),intent(out)  ::  tref (nMax) ! diag:  2m ref height T     (K)
-    real(R8),intent(out)  ::  qref (nMax) ! diag:  2m ref humidity (kg/kg)
-    real(R8),intent(out)  :: duu10n(nMax) ! diag: 10m wind speed squared (m/s)^2
-    real(R8),intent(out)  :: ugust_out(nMax) ! diag: gustiness addition to U10 (m/s)
-    real(R8),intent(out)  :: u10res(nMax) ! diag: gustiness addition to U10 (m/s)
+    real(R8),intent(out)  ::  sen  (:) ! heat flux: sensible    (W/m^2)
+    real(R8),intent(out)  ::  lat  (:) ! heat flux: latent      (W/m^2)
+    real(R8),intent(out)  ::  lwup (:) ! heat flux: lw upward   (W/m^2)
+    real(R8),intent(out)  ::  evap (:) ! water flux: evap  ((kg/s)/m^2)
+    real(R8),intent(out)  ::  evap_16O (:) ! water flux: evap ((kg/s/m^2)
+    real(R8),intent(out)  ::  evap_HDO (:) ! water flux: evap ((kg/s)/m^2)
+    real(R8),intent(out)  ::  evap_18O (:) ! water flux: evap ((kg/s/m^2)
+    real(R8),intent(out)  ::  taux (:) ! surface stress, zonal      (N)
+    real(R8),intent(out)  ::  tauy (:) ! surface stress, maridional (N)
+    real(R8),intent(out)  ::  tref (:) ! diag:  2m ref height T     (K)
+    real(R8),intent(out)  ::  qref (:) ! diag:  2m ref humidity (kg/kg)
+    real(R8),intent(out)  :: duu10n(:) ! diag: 10m wind speed squared (m/s)^2
+    real(R8),intent(out)  :: ugust_out(:) ! diag: gustiness addition to U10 (m/s)
+    real(R8),intent(out)  :: u10res(:) ! diag: gustiness addition to U10 (m/s)
 
-    real(R8),intent(out),optional :: ustar_sv(nMax) ! diag: ustar
-    real(R8),intent(out),optional :: re_sv   (nMax) ! diag: sqrt of exchange coefficient (water)
-    real(R8),intent(out),optional :: ssq_sv  (nMax) ! diag: sea surface humidity  (kg/kg)
+    real(R8),intent(out),optional :: ustar_sv(:) ! diag: ustar
+    real(R8),intent(out),optional :: re_sv   (:) ! diag: sqrt of exchange coefficient (water)
+    real(R8),intent(out),optional :: ssq_sv  (:) ! diag: sea surface humidity  (kg/kg)
 
     real(R8),intent(in) ,optional :: missval ! masked value
 

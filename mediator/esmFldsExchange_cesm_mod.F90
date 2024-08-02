@@ -141,6 +141,8 @@ contains
     character(len=CS)   :: mrgfld_source
     logical             :: wav_coupling_to_cice
     logical             :: ocn2glc_coupling
+    logical             :: add_gusts
+    logical             :: isPresent, isSet
     character(len=*) , parameter   :: subname=' (esmFldsExchange_cesm) '
     !--------------------------------------
 
@@ -161,6 +163,14 @@ contains
     nullify(is_local%wrap)
     call ESMF_GridCompGetInternalState(gcomp, is_local, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    call NUOPC_CompAttributeGet(gcomp, name='add_gusts', value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) add_gusts
+    else
+       add_gusts = .false.
+    end if
 
     if (phase == 'advertise') then
 
@@ -1414,20 +1424,22 @@ contains
     ! ---------------------------------------------------------------------
     ! to atm: unmerged ugust_out from ocn
     ! ---------------------------------------------------------------------
-    if (phase == 'advertise') then
-       call addfld_aoflux('So_ugustOut')
-       call addfld_to(compatm, 'So_ugustOut')
-    else
-       if ( fldchk(is_local%wrap%FBexp(compatm), 'So_ugustOut', rc=rc)) then
-          if (fldchk(is_local%wrap%FBMed_aoflux_o, 'So_ugustOut', rc=rc)) then
-             if (trim(is_local%wrap%aoflux_grid) == 'ogrid') then
-                call addmap_aoflux('So_ugustOut', compatm, mapconsf, 'ofrac', ocn2atm_map)
+    if(add_gusts) then
+       if (phase == 'advertise') then
+          call addfld_aoflux('So_ugustOut')
+          call addfld_to(compatm, 'So_ugustOut')
+       else
+          if ( fldchk(is_local%wrap%FBexp(compatm), 'So_ugustOut', rc=rc)) then
+             if (fldchk(is_local%wrap%FBMed_aoflux_o, 'So_ugustOut', rc=rc)) then
+                if (trim(is_local%wrap%aoflux_grid) == 'ogrid') then
+                   call addmap_aoflux('So_ugustOut', compatm, mapconsf, 'ofrac', ocn2atm_map)
+                end if
+                call addmrg_to(compatm , 'So_ugustOut', &
+                     mrg_from=compmed, mrg_fld='So_ugustOut', mrg_type='merge', mrg_fracname='ofrac')
              end if
-             call addmrg_to(compatm , 'So_ugustOut', &
-                  mrg_from=compmed, mrg_fld='So_ugustOut', mrg_type='merge', mrg_fracname='ofrac')
           end if
        end if
-    end if
+    endif
 
     ! ---------------------------------------------------------------------
     ! to atm: 10 m winds including/excluding gust component
