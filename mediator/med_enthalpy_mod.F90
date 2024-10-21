@@ -206,6 +206,7 @@ contains
           hevap(n)  = hevap_a(n) * ofrac(n)
           hcond(n)  = 0._r8
        enddo
+       print *,__FILE__,__LINE__,sum(hevap)
     else
        do n = 1,nmax
           !hevap(n)  = (tocn(n) - tkfrz) * min(evap(n),0._r8) * cpwv * ofrac(n)
